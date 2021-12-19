@@ -1,36 +1,76 @@
 #include "gui.h"
+#include <SDL2/SDL.h> // for the SDL2-functions
+#include <stdio.h>
 #include <stdlib.h>
 
-enum Command command;
-int user_row;    // will be overwritten if command is 'r' or 'f'
-int user_column; // will be overwritten if command is 'r' or 'f'
+/*
+The height and width of the window (in pixels).
+*/
+#define WINDOW_HEIGHT 500
+#define WINDOW_WIDTH 500
+
+/*
+The height and width (in pixels) of the cell-images that are displayed in the playing field.
+ */
+#define IMAGE_HEIGHT 50
+#define IMAGE_WIDTH 50
+
+/* 
+The number of rows and columns of the playing field determined by the player.
+*/
 extern int ROWS;
 extern int COLUMNS;
 
 /*
-This renderer is used to draw figures in the window. 
-The renderer is initialized in the initialize_window function.
- */
-static SDL_Renderer *renderer;
-
-SDL_Texture *textures_array[12];
+The variables below represent the player's events.
+*/
+enum Command USER_COMMAND;
+int USER_ROW;
+int USER_COLUMN;
 
 /*
-static SDL_Texture *digit_0_texture = NULL;
-static SDL_Texture *digit_1_texture = NULL;
-static SDL_Texture *digit_2_texture = NULL;
-static SDL_Texture *digit_3_texture = NULL;
-static SDL_Texture *digit_4_texture = NULL;
-static SDL_Texture *digit_5_texture = NULL;
-static SDL_Texture *digit_6_texture = NULL;
-static SDL_Texture *digit_7_texture = NULL;
-static SDL_Texture *digit_8_texture = NULL;
-static SDL_Texture *covered_texture = NULL;
-static SDL_Texture *flagged_texture = NULL;
-static SDL_Texture *bomb_texture = NULL;
-*/
-SDL_Texture *Textures_array[12];
+This renderer is used to draw figures in the window. 
+The renderer is initialized in the "initialize_window" function.
+ */
+static SDL_Renderer *RENDERER;
 
+/*
+The two variables below keep track of the last position where the user clicked.
+ */
+int MOUSE_X = 0;
+int MOUSE_Y = 0;
+
+/*
+Indicates whether the application should continue. 
+This is true as long as the user does not want to close the application by clicking the x button on the screen.
+ */
+enum Boolean SHOULD_CONTINUE = TRUE;
+
+/*
+This is the window that will be shown and in which the playing field is displayed. 
+This window is created when initializing the GUI and is aborted when the game ends.
+ */
+static SDL_Window *WINDOW;
+
+/*
+Contains all the textures. 
+They are placed in an array to easily grab the texture depending on the number of neighbours of a cell.
+*/
+SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
+#define AMOUNT_OF_TEXTURES 12
+#define HIDDEN_TEXTURE_INDEX 9
+#define FLAG_TEXTURE_INDEX 10
+#define MINE_TEXTURE_INDEX 11
+
+
+
+/*
+This auxiliary procedure is used in read_input to take actions only on relevant input from the user.
+Relevant events are:
+mouse-clicks
+keyboard-input
+pressing on x button on the screen
+*/
 int is_relevant_event(SDL_Event *event) {
     if (event == NULL) {
         return 0;
@@ -41,212 +81,163 @@ int is_relevant_event(SDL_Event *event) {
 }
 
 /*
- * Onderstaande twee lijnen maken deel uit van de minimalistische voorbeeldapplicatie:
- * ze houden de laatste positie bij waar de gebruiker geklikt heeft.
- */
-int mouse_x = 0;
-int mouse_y = 0;
+This auxiliary procedure is used in read_input to ensure that the command is reset to "nothing". 
+Only if the previous command was the print command we do not need to reset it because read_input 
+needs to know that the user has already asked for a print so that this time the playing field is reset to its original display.
+*/
+void reset_command(void) {
+    if (USER_COMMAND != PRINT) {
+        USER_COMMAND = NOTHING;
+    }
+}
 
 /*
- * Geeft aan of de applicatie moet verdergaan.
- * Dit is waar zolang de gebruiker de applicatie niet wilt afsluiten door op het kruisje te klikken.
- */
-int should_continue = 1;
+The three functions below provide abstractions to aid code readability. 
+In addition, it is possible to customize the controls of the game below.
+*/
+int is_print_input(SDL_Event event) {
+    event.key.keysym.sym == SDLK_p
+}
+int is_reveal_input(SDL_Event event) {
+    event.button.button == SDL_BUTTON_LEFT
+}
+int is_flag_input(SDL_Event event) {
+    event.button.button == SDL_BUTTON_RIGHT
+}
 
 /*
- * Dit is het venster dat getoond zal worden en waarin het speelveld weergegeven wordt.
- * Dit venster wordt aangemaakt bij het initialiseren van de GUI en wordt weer afgebroken
- * wanneer het spel ten einde komt.
- */
-static SDL_Window *window;
-
-/*
- * Vangt de input uit de GUI op. Deze functie is al deels geïmplementeerd, maar je moet die zelf
- * nog afwerken. Je mag natuurlijk alles aanpassen aan deze functie, inclusies return-type en argumenten.
+Receives input from the GUI.
  */
 void read_input() {
     SDL_Event event;
-    if (command != PRINT) {
-        command = NOTHING;
-    }
 
-    /*
-	 * Handelt alle input uit de GUI af.
-	 * Telkens de speler een input in de GUI geeft (bv. een muisklik, muis bewegen, toets indrukken enz.)
-	 * wordt er een 'event' (van het type SDL_Event) gegenereerd dat hier wordt afgehandeld.
-	 *
-	 * Zie ook https://wiki.libsdl.org/SDL_PollEvent en http://www.parallelrealities.co.uk/2011_09_01_archive.html
-	 */
+    reset_command();
+
     while (!SDL_PollEvent(&event) || !is_relevant_event(&event)) {
+        // do nothing
     }
 
     switch (event.type) {
     case SDL_KEYDOWN:
-        if (event.key.keysym.sym == SDLK_p) {
-            if (command == PRINT) {
-                command = NOTHING;
+        if (is_print_input(event)) {
+            if (USER_COMMAND == PRINT) {
+                USER_COMMAND = NOTHING;
             } else {
-                command = PRINT;
+                USER_COMMAND = PRINT;
             }
         }
         break;
+
     case SDL_MOUSEBUTTONDOWN:
-        user_column = event.button.x / 50;
-        user_row = event.button.y / 50;
-        if (event.button.button == SDL_BUTTON_LEFT) {
-            command = REVEAL;
-        } else if (event.button.button == SDL_BUTTON_RIGHT) {
-            command = FLAG;
+        USER_COLUMN = event.button.x / IMAGE_WIDTH;
+        USER_ROW = event.button.y / IMAGE_HEIGHT;
+        if (is_reveal_input(event)) {
+            USER_COMMAND = REVEAL;
+        } else if (is_flag_input(event)) {
+            USER_COMMAND = FLAG;
         }
         break;
-    case SDL_QUIT:
-        /* De gebruiker heeft op het kruisje van het venster geklikt om de applicatie te stoppen. */
-        should_continue = 0;
-        break;
 
-        // case SDL_MOUSEBUTTONDOWN:
-        //     /*
-        // 	 * De speler heeft met de muis geklikt: met de onderstaande lijn worden de coördinaten in het
-        // 	 * het speelveld waar de speler geklikt heeft bewaard in de variabelen mouse_x en mouse_y.
-        // 	 */
-        //     mouse_x = event.button.x;
-        //     mouse_y = event.button.y;
-        //     printf("Clicked at (%i,%i)\n", mouse_x, mouse_y);
-        //     break;
+    case SDL_QUIT:
+        SHOULD_CONTINUE = FALSE;
+        break;
     }
 }
 
+
 /* 
-Calls the "print_field" function to print the whole field. The second paramater indicates whether the 
-field has to be revealed. 
+Calls the "draw_field" function to draw the field. 
 */
 void call_the_drawer(struct cell playing_field[ROWS][COLUMNS]) {
-    if (command == PRINT) {
+    if (USER_COMMAND == PRINT) {
         draw_field(playing_field, TRUE);
     } else {
         draw_field(playing_field, FALSE);
     }
 }
 
-void draw_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_all) { // ook flags tonen?
+/*
+Draws the playing field.
+*/
+void draw_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_all) {
 
-    SDL_RenderClear(renderer);
+    SDL_RenderClear(RENDERER);
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLUMNS; j++) {
             struct cell *current_cell = &playing_field[i][j];
             SDL_Rect rectangle = {j * IMAGE_WIDTH, i * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
-                if (current_cell->flagged && !reveal_all) { // sequence of conidition checks plays a crucial role, because otherwise a flagged cell would contain the neighbours_count on the screen
-                    SDL_RenderCopy(renderer, Textures_array[10], NULL, &rectangle);
+                if (current_cell->flagged && !reveal_all) { // sequence of condition checks plays a crucial role, because otherwise a flagged cell would contain the neighbours_count on the screen
+                    SDL_RenderCopy(RENDERER, TEXTURES_ARRAY[FLAG_TEXTURE_INDEX], NULL, &rectangle);
                 } else if (!current_cell->bomb) {
-                    SDL_RenderCopy(renderer, Textures_array[current_cell->neighbours_count], NULL, &rectangle);
+                    SDL_RenderCopy(RENDERER, TEXTURES_ARRAY[current_cell->neighbours_count], NULL, &rectangle);
                 } else {
-                    SDL_RenderCopy(renderer, Textures_array[11], NULL, &rectangle);
+                    SDL_RenderCopy(RENDERER, TEXTURES_ARRAY[MINE_TEXTURE_INDEX], NULL, &rectangle);
                 }
             } else {
-                SDL_RenderCopy(renderer, Textures_array[9], NULL, &rectangle);
+                SDL_RenderCopy(RENDERER, TEXTURES_ARRAY[HIDDEN_TEXTURE_INDEX], NULL, &rectangle);
             };
         }
     }
-    SDL_RenderPresent(renderer);
-}
-
-void draw_window() {
-    /*
-	 * Maakt het venster blanco.
-	 */
-    SDL_RenderClear(renderer);
-
-    //  /*
-    //  * Bereken de plaats (t.t.z., de rechthoek) waar een afbeelding moet getekend worden.
-    //  * Dit is op de plaats waar de gebruiker het laatst geklikt heeft.
-    //  */
-    //  SDL_Rect rectangle = {mouse_x, mouse_y, IMAGE_WIDTH, IMAGE_HEIGHT};
-    //  /* Tekent de afbeelding op die plaats. */
-    //  SDL_RenderCopy(renderer, digit_1_texture, NULL, &rectangle);
-    //
-    //  SDL_Rect rectanglee = {mouse_x + IMAGE_WIDTH, mouse_y + IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
-    //  /* Tekent de afbeelding op die plaats. */
-    //  SDL_RenderCopy(renderer, digit_1_texture, NULL, &rectanglee);
-
-    /*
-	 * Onderstaande code moet zeker worden uitgevoerd op het einde van deze functie.
-	 * Wanneer je iets tekent in het venster wordt dit venster nl. niet meteen aangepast.
-	 * Via de SDL_RenderPresent functie wordt het venster correct geüpdatet.
-	 */
-    SDL_RenderPresent(renderer);
+    SDL_RenderPresent(RENDERER);
 }
 
 /*
- * Initialiseert het venster en alle extra structuren die nodig zijn om het venster te manipuleren.
+Clears the screen and updates it to the new version.
+*/
+void draw_window() {
+
+    SDL_RenderClear(RENDERER);
+    SDL_RenderPresent(RENDERER);
+}
+
+
+/*
+Initializes the window and any additional structures needed to manipulate the window.
  */
 void initialize_window(const char *title) {
-    /*
-	 * Code o.a. gebaseerd op:
-	 * http://lazyfoo.net/tutorials/SDL/02_getting_an_image_on_the_screen/index.php
-	 */
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Could not initialize SDL: %s\n", SDL_GetError());
         exit(1);
     }
 
-    /* Maak het venster aan met de gegeven dimensies en de gegeven titel. */
-    window = SDL_CreateWindow(title, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    WINDOW = SDL_CreateWindow(title, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN); // creates the window
 
-    if (window == NULL) {
-        /* Er ging iets verkeerd bij het initialiseren. */
+    if (WINDOW == NULL) {
         printf("Couldn't set screen mode to required dimensions: %s\n", SDL_GetError());
         exit(1);
     }
 
-    /* Initialiseert de renderer. */
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-    /* Laat de default-kleur die de renderer in het venster tekent wit zijn. */
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_PRESENTVSYNC);
+
+    SDL_SetRenderDrawColor(RENDERER, 255, 255, 255, 255); // default color of the window (white)
 }
 
+
 /*
- * Dealloceert alle SDL structuren die geïnitialiseerd werden.
+Deallocates all SDL-structures that were initialized.
  */
 void free_gui() {
-    /* Dealloceert de SDL_Textures die werden aangemaakt. */
-    for (int i = 0; i < 12; i++) {
-        SDL_DestroyTexture(Textures_array[i]);
-    }
-    /* Dealloceert het venster. */
-    SDL_DestroyWindow(window);
-    /* Dealloceert de renderer. */
-    SDL_DestroyRenderer(renderer);
 
-    /* Sluit SDL af. */
-    SDL_Quit();
+    for (int i = 0; i < AMOUNT_OF_TEXTURES; i++) {
+        SDL_DestroyTexture(TEXTURES_ARRAY[i]); // textures
+    }
+
+    SDL_DestroyWindow(WINDOW); // the window
+
+    SDL_DestroyRenderer(RENDERER); // the renderer
+
+    SDL_Quit(); // closes SDL
 }
 
+
 /*
- * Laadt alle afbeeldingen die getoond moeten worden in.
+Loads all the images and converts them to textures.
  */
 void initialize_textures() {
-    /*
-	 * Laadt de afbeeldingen in. In deze minimalistische applicatie laden we slechts 1 afbeelding in.
-	 * Indien de afbeelding niet kon geladen worden (bv. omdat het pad naar de afbeelding verkeerd is),
-	 * geeft SDL_LoadBMP een NULL-pointer terug.
-	 */
-    /*
-    SDL_Surface *digit_0_surface = SDL_LoadBMP("Images/0.bmp");
-    SDL_Surface *digit_1_surface = SDL_LoadBMP("Images/1.bmp");
-    SDL_Surface *digit_2_surface = SDL_LoadBMP("Images/2.bmp");
-    SDL_Surface *digit_3_surface = SDL_LoadBMP("Images/3.bmp");
-    SDL_Surface *digit_4_surface = SDL_LoadBMP("Images/4.bmp");
-    SDL_Surface *digit_5_surface = SDL_LoadBMP("Images/5.bmp");
-    SDL_Surface *digit_6_surface = SDL_LoadBMP("Images/6.bmp");
-    SDL_Surface *digit_7_surface = SDL_LoadBMP("Images/7.bmp");
-    SDL_Surface *digit_8_surface = SDL_LoadBMP("Images/8.bmp");
-    SDL_Surface *covered_surface = SDL_LoadBMP("Images/covered.bmp");
-    SDL_Surface *flagged_surface = SDL_LoadBMP("Images/flagged.bmp");
-    SDL_Surface *bomb_surface = SDL_LoadBMP("Images/mine.bmp");
-    */
 
-    SDL_Surface *Surface_array[] = {
+    SDL_Surface *images_array[AMOUNT_OF_TEXTURES] = {
         SDL_LoadBMP("Images/0.bmp"),
         SDL_LoadBMP("Images/1.bmp"),
         SDL_LoadBMP("Images/2.bmp"),
@@ -259,33 +250,21 @@ void initialize_textures() {
         SDL_LoadBMP("Images/covered.bmp"),
         SDL_LoadBMP("Images/flagged.bmp"),
         SDL_LoadBMP("Images/mine.bmp")};
-    /*
-	 * Zet deze afbeelding om naar een texture die getoond kan worden in het venster.
-	 * Indien de texture niet kon omgezet worden, geeft de functie een NULL-pointer terug.
-	 */
-    for (int i = 0; i < 12; i++) {
-        Textures_array[i] = SDL_CreateTextureFromSurface(renderer, Surface_array[i]);
-        SDL_FreeSurface(Surface_array[i]);
+
+    for (int i = 0; i < AMOUNT_OF_TEXTURES; i++) {
+        if ((TEXTURES_ARRAY[i] = SDL_CreateTextureFromSurface(RENDERER, images_array[i])) == NULL) {
+            printf("Image with index %d could not be converted to a texture.", i);
+        }
+        SDL_FreeSurface(images_array[i]);
     }
 }
 
+
 /*
- * Initialiseert onder het venster waarin het speelveld getoond zal worden, en de texture van de afbeelding die getoond zal worden.
- * Deze functie moet aangeroepen worden aan het begin van het spel, vooraleer je de spelwereld begint te tekenen.
+Initializes the window and the textures of the images that will be displayed. 
+This function is called at the beginning of the game, before the playing field is drawn.
  */
 void initialize_gui() {
-    initialize_window("Minesweeper");
+    initialize_window("MineSweeper");
     initialize_textures();
 }
-
-// int main(int argc, char *argv[]) {
-//     initialize_gui();
-//     draw_field();
-//     while (should_continue) {
-//         read_input();
-//         //		draw_window()
-//     }
-//     /* Dealloceer al het geheugen dat werd aangemaakt door SDL zelf. */
-//     free_gui();
-//     return 0;
-// }
