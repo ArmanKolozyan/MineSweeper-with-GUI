@@ -53,14 +53,14 @@ This window is created when initializing the GUI and is aborted when the game en
 static SDL_Window *WINDOW;
 
 /*
-Contains all the textures. 
+Textures-array contains all the textures. 
 They are placed in an array to easily grab the texture depending on the number of neighbours of a cell.
 */
-SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
 #define AMOUNT_OF_TEXTURES 12
 #define HIDDEN_TEXTURE_INDEX 9
 #define FLAG_TEXTURE_INDEX 10
 #define MINE_TEXTURE_INDEX 11
+SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
 
 
 
@@ -96,13 +96,13 @@ The three functions below provide abstractions to aid code readability.
 In addition, it is possible to customize the controls of the game below.
 */
 int is_print_input(SDL_Event event) {
-    event.key.keysym.sym == SDLK_p
+    event.key.keysym.sym == SDLK_p;
 }
 int is_reveal_input(SDL_Event event) {
-    event.button.button == SDL_BUTTON_LEFT
+    event.button.button == SDL_BUTTON_LEFT;
 }
 int is_flag_input(SDL_Event event) {
-    event.button.button == SDL_BUTTON_RIGHT
+    event.button.button == SDL_BUTTON_RIGHT;
 }
 
 /*

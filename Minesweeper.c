@@ -11,14 +11,15 @@
 #include "handle_input.h"
 #include "macros.h"
 #include "printing.h"
+#include <string.h> // for the strcpy-function
 #include <stdio.h>
 #include <stdlib.h> // for the rand- & srand-functions
 #include <time.h>   // for the time-function
 #include <unistd.h> //for the sleep-function
 
-extern int user_row;
-extern int user_column;
-extern int should_continue;
+extern int USER_ROW;
+extern int USER_COLUMN;
+extern int SHOULD_CONTINUE;
 int ROWS = 10;
 int COLUMNS = 10;
 int TOTAL_BOMBS = 10;
@@ -56,7 +57,7 @@ void install_bombs(struct cell playing_field[ROWS][COLUMNS]) {
     while (placed_bombs != TOTAL_BOMBS) {
         int bomb_row = rand() % ROWS;
         int bomb_column = rand() % COLUMNS;
-        if ((bomb_row != user_row) || (bomb_column != user_column)) {
+        if ((bomb_row != USER_ROW) || (bomb_column != USER_COLUMN)) {
             struct cell *bomb_cell = &playing_field[bomb_row][bomb_column];
             if (!bomb_cell->bomb) { // to ensure that all bombs are placed in different cells
                 bomb_cell->bomb = TRUE;
@@ -263,7 +264,7 @@ int main(int argc, const char *argv[]) {
     initialize_gui();
   //  call_the_drawer(playing_field);
     initialize(playing_field, &placed_flags, &correct_placed_flags);
-    while (!GAME_OVER && !GAME_WON && should_continue) {
+    while (!GAME_OVER && !GAME_WON && SHOULD_CONTINUE) {
         read_input();
         process_input(playing_field, &placed_flags, &correct_placed_flags);
         if (!GAME_OVER && !GAME_WON) { // to ensure that in case of a win or loss (determined by the above "process_input"), the field is not printed twice
