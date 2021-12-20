@@ -90,7 +90,9 @@ int main(int argc, const char *argv[]) {
     char filename[filaneme_size];
     enum Boolean file_flag = FALSE;
 
-    get_initial_arguments(argc, argv, filename, &file_flag);
+    if (!get_initial_arguments(argc, argv, filename, &file_flag)) {
+        exit(EXIT_FAILURE);
+    }
 
     USER_ROW = rand() % ROWS;
     USER_COLUMN = rand() % COLUMNS;

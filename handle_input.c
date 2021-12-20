@@ -1,9 +1,9 @@
 #include "handle_input.h"
+#include "cell.h"
+#include "datatypes.h"
 #include <stdio.h>
 #include <stdlib.h> // for the atoi-function
 #include <string.h> // for the strcpy-function
-#include "datatypes.h"
-#include "cell.h" 
 
 extern enum Command USER_COMMAND;
 extern int USER_ROW;
@@ -12,14 +12,15 @@ extern int TOTAL_BOMBS;
 extern int ROWS;
 extern int COLUMNS;
 
-
 /*
 The program can be started in two ways. It is both possible to load a saved playfield and continue with it, and to simply start from a new field with given dimensions. 
 If the state of the game is stored in a file called "state.txt", then the player can load the game using the following command: ./MineSweeper -f state.txt
 On the other hand, the player can also start a new playfield with width 20 and height 10 that contains 15 mines, by executing the following command: ./MineSweeper -w 20 -h 10 -m 15.
 These three arguments can be entered in any order.
+
+This function returns 1 if everything went well, otherwise it returns 0 so that the game process is stopped.
 */
-void get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
+int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
     int can_continue = 1, opt;
     while ((--argc > 0) && (**++argv == '-') && can_continue)
         while ((opt = *++*argv) != '\0') {
@@ -27,61 +28,72 @@ void get_initial_arguments(int argc, const char *argv[], char *filename, enum Bo
             case 'w':
                 argv++;
                 --argc;
-                ROWS = atoi(*argv);
-                break;
+                if ((argc < 0) || ((COLUMNS = atoi(*argv)) == 0)) {
+                    printf("Please provide a valid width.\nYou can do this by entering the desired number after the '-w' flag.\n");
+                    can_continue = 0;
+                    break;
+                }
             case 'h':
                 argv++;
                 --argc;
-                COLUMNS = atoi(*argv);
+                if ((argc < 0) || ((ROWS = atoi(*argv)) == 0)) {
+                    printf("Please provide a valid height.\nYou can do this by entering the desired number after the '-h' flag.\n");
+                    can_continue = 0;
+                }
                 break;
             case 'm':
                 argv++;
                 --argc;
-                TOTAL_BOMBS = atoi(*argv);
+                if ((argc < 0) || ((TOTAL_BOMBS = atoi(*argv)) == 0)) {
+                    printf("Please provide a valid number of mines.\nYou can do this by entering the desired number after the '-m' flag.\n");
+                    can_continue = 0;
+                }
                 break;
             case 'f':
                 argv++;
                 --argc;
                 FILE *fp;
-                fp = fopen(*argv, "r");
-                char rows_input[5];
-                char columns_input[5];
-                fgets(rows_input, sizeof rows_input, fp);
-                fgets(columns_input, sizeof columns_input, fp);
-                fclose(fp);
-                ROWS = atoi(rows_input);
-                COLUMNS = atoi(columns_input);
-                strcpy(filename, *argv);
-                can_continue = 0;
-                *file_flag = TRUE;
+                if ((fp = fopen(*argv, "r")) != NULL) {
+                    char rows_input[5];
+                    char columns_input[5];
+                    fgets(rows_input, sizeof rows_input, fp);
+                    fgets(columns_input, sizeof columns_input, fp);
+                    fclose(fp);
+                    ROWS = atoi(rows_input);
+                    COLUMNS = atoi(columns_input);
+                    strcpy(filename, *argv);
+                    *file_flag = TRUE;
+                } else {
+                    fclose(fp);
+                    can_continue = 0;
+                    printf("Please provide a valid file name.\nYou can do this by entering the correct file name after the '-f' flag.\n");
+                }
                 break;
             default:
-                printf("illegal option %c\n", opt);
+                printf("Illegal option %c\n", opt);
                 can_continue = 0;
                 break;
             }
-            if ((ROWS == -2) || (COLUMNS == -2) || (TOTAL_BOMBS == -2)) {
-                printf("Usage: find -x -n pattern\n");
+            if (!can_continue) {
+                printf("Usage examples: ./MineSweeper -w 5 -h 7 -m 2\n                /MineSweeper -f game_state.txt");
                 can_continue = 0;
+                return 0;
             }
             break;
         }
+    return 1;
 }
 
 void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
     if (USER_COMMAND == REVEAL) {
         reveal(playing_field, USER_ROW, USER_COLUMN, placed_flags, correct_placed_flags);
     } else if (USER_COMMAND == FLAG) {
-       place_flag(&playing_field[USER_ROW][USER_COLUMN], placed_flags, correct_placed_flags);
+        place_flag(&playing_field[USER_ROW][USER_COLUMN], placed_flags, correct_placed_flags);
     } else if (USER_COMMAND == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that,
-    }                               //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
+    }                                   //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
 }
 
-
- enum Boolean player_wants_to_replay() {
-     printf("Press ENTER if you want to replay!\n");
-     getchar() == '\n';
- }
-
-
-
+enum Boolean player_wants_to_replay() {
+    printf("Press ENTER if you want to replay!\n");
+    getchar() == '\n';
+}
