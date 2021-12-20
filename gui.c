@@ -1,20 +1,36 @@
 #include "gui.h"
 #include <SDL2/SDL.h> // for the SDL2-functions
 #include <stdio.h>
-#include <stdlib.h> // for the rand-function
 #include <stdlib.h>
-
-/*
-The height and width of the window (in pixels).
-*/
-#define WINDOW_HEIGHT 500
-#define WINDOW_WIDTH 500
 
 /*
 The height and width (in pixels) of the cell-images that are displayed in the playing field.
  */
 #define IMAGE_HEIGHT 50
 #define IMAGE_WIDTH 50
+
+/*
+The controls of the game that you can easily customize by changing these macros.
+*/
+#define PRINT_KEY SDLK_p
+#define REVEAL_KEY SDL_BUTTON_LEFT
+#define FLAG_KEY SDL_BUTTON_RIGHT
+
+/*
+Textures-array contains all the textures. 
+They are placed in an array to easily grab the texture depending on the number of neighbours of a cell.
+*/
+#define AMOUNT_OF_TEXTURES 12
+#define HIDDEN_TEXTURE_INDEX 9
+#define FLAG_TEXTURE_INDEX 10
+#define MINE_TEXTURE_INDEX 11
+SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
+
+/*
+The height and width of the window (in pixels).
+*/
+int WINDOW_HEIGHT;
+int WINDOW_WIDTH;
 
 /* 
 The number of rows and columns of the playing field determined by the player.
@@ -24,12 +40,14 @@ extern int COLUMNS;
 
 /*
 The variables below represent the player's events.
-The row and column chosen by the player is initially a random number. Since when installing the mines we prevent the player from immediately, 
-in the first turn, stepping on a mine and losing the game, this ensures that the function runs correctly even though the player's first command is the print command.
+The row and column chosen by the player will be initialized by a random number. 
+Since when installing the mines we prevent the player from immediately, 
+in the first turn, stepping on a mine and losing the game, 
+this ensures that the function runs correctly even though the player's first command is the print command.
 */
 enum Command USER_COMMAND;
-int USER_ROW = rand() % ROWS;
-int USER_COLUMN = rand() % COLUMNS;
+int USER_ROW;
+int USER_COLUMN;
 
 /*
 This renderer is used to draw figures in the window. 
@@ -54,16 +72,6 @@ This is the window that will be shown and in which the playing field is displaye
 This window is created when initializing the GUI and is aborted when the game ends.
  */
 static SDL_Window *WINDOW;
-
-/*
-Textures-array contains all the textures. 
-They are placed in an array to easily grab the texture depending on the number of neighbours of a cell.
-*/
-#define AMOUNT_OF_TEXTURES 12
-#define HIDDEN_TEXTURE_INDEX 9
-#define FLAG_TEXTURE_INDEX 10
-#define MINE_TEXTURE_INDEX 11
-SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
 
 
 
@@ -95,20 +103,6 @@ void reset_command(void) {
 }
 
 /*
-The three functions below provide abstractions to aid code readability. 
-In addition, it is possible to customize the controls of the game below.
-*/
-int is_print_input(SDL_Event event) {
-    event.key.keysym.sym == SDLK_p;
-}
-int is_reveal_input(SDL_Event event) {
-    event.button.button == SDL_BUTTON_LEFT;
-}
-int is_flag_input(SDL_Event event) {
-    event.button.button == SDL_BUTTON_RIGHT;
-}
-
-/*
 Receives input from the GUI.
  */
 void read_input() {
@@ -122,7 +116,7 @@ void read_input() {
 
     switch (event.type) {
     case SDL_KEYDOWN:
-        if (is_print_input(event)) {
+        if (event.key.keysym.sym == PRINT_KEY) { 
             if (USER_COMMAND == PRINT) {
                 USER_COMMAND = NOTHING;
             } else {
@@ -134,9 +128,9 @@ void read_input() {
     case SDL_MOUSEBUTTONDOWN:
         USER_COLUMN = event.button.x / IMAGE_WIDTH;
         USER_ROW = event.button.y / IMAGE_HEIGHT;
-        if (is_reveal_input(event)) {
+        if (event.button.button == REVEAL_KEY) {
             USER_COMMAND = REVEAL;
-        } else if (is_flag_input(event)) {
+        } else if (event.button.button == FLAG_KEY) {
             USER_COMMAND = FLAG;
         }
         break;
@@ -268,6 +262,8 @@ Initializes the window and the textures of the images that will be displayed.
 This function is called at the beginning of the game, before the playing field is drawn.
  */
 void initialize_gui() {
+    WINDOW_HEIGHT = IMAGE_HEIGHT * ROWS;
+    WINDOW_WIDTH = IMAGE_WIDTH * COLUMNS;
     initialize_window("MineSweeper");
     initialize_textures();
 }

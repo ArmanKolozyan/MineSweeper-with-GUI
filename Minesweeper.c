@@ -10,7 +10,6 @@
 #include "gui.h"
 #include "handle_input.h"
 #include "macros.h"
-#include <string.h> // for the strcpy-function
 #include <stdio.h>
 #include <stdlib.h> // for the rand- & srand-function
 #include <string.h> // for the strcpy-function
@@ -100,6 +99,7 @@ void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *place
             fgets(input_buffer, sizeof input_buffer, fp);
             char curr = input_buffer[0];
             if (curr == 'B') {
+                TOTAL_BOMBS++;
                 current_cell->neighbours_count = 0;
                 current_cell->bomb = TRUE;
             } else {
@@ -216,7 +216,7 @@ On the other hand, the player can also start a new playfield with width 20 and h
 These three arguments can be entered in any order.
 */
 void get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
-    int can_continue, opt;
+    int can_continue = 1, opt;
     while ((--argc > 0) && (**++argv == '-') && can_continue)
         while ((opt = *++*argv) != '\0') {
             switch (opt) {
@@ -266,7 +266,8 @@ void get_initial_arguments(int argc, const char *argv[], char *filename, enum Bo
 
 int main(int argc, const char *argv[]) {
     GAME_WON = FALSE;
-    GAME_OVER = FALSE; //To initialize the variables when starting a new game-session.
+    GAME_OVER = FALSE;
+    TOTAL_BOMBS = 0; //To initialize the variables when starting a new game-session.
 
     const int filaneme_size = 50;
     char filename[filaneme_size];
@@ -274,12 +275,15 @@ int main(int argc, const char *argv[]) {
 
     get_initial_arguments(argc, argv, filename, &file_flag);
 
+    //  USER_ROW = rand() % ROWS;
+    //  USER_COLUMN = rand() % COLUMNS;
+
     struct cell(*playing_field)[COLUMNS] = malloc(sizeof(struct cell[ROWS][COLUMNS]));
     int placed_flags = 0;
     int correct_placed_flags = 0; // if correct_placed_flags == TOTAL_BOMBS => the player has won
 
     if (file_flag) {
-        decode(filename, playing_field, placed_flags, correct_placed_flags);
+        decode(filename, playing_field, &placed_flags, &correct_placed_flags);
         initialize_gui();
         call_the_drawer(playing_field);
     } else {
