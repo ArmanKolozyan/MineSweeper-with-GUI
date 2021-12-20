@@ -2,6 +2,12 @@
 #include <SDL2/SDL.h> // for the SDL2-functions
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> // for the strcat-function
+
+/*
+The folder where images are stored. 
+*/
+#define IMAGES_FOLDER "Images/"
 
 /*
 The height and width (in pixels) of the cell-images that are displayed in the playing field.
@@ -73,8 +79,6 @@ This window is created when initializing the GUI and is aborted when the game en
  */
 static SDL_Window *WINDOW;
 
-
-
 /*
 This auxiliary procedure is used in read_input to take actions only on relevant input from the user.
 Relevant events are:
@@ -116,7 +120,7 @@ void read_input() {
 
     switch (event.type) {
     case SDL_KEYDOWN:
-        if (event.key.keysym.sym == PRINT_KEY) { 
+        if (event.key.keysym.sym == PRINT_KEY) {
             if (USER_COMMAND == PRINT) {
                 USER_COMMAND = NOTHING;
             } else {
@@ -140,7 +144,6 @@ void read_input() {
         break;
     }
 }
-
 
 /* 
 Calls the "draw_field" function to draw the field. 
@@ -188,7 +191,6 @@ void draw_window() {
     SDL_RenderPresent(RENDERER);
 }
 
-
 /*
 Initializes the window and any additional structures needed to manipulate the window.
  */
@@ -211,7 +213,6 @@ void initialize_window(const char *title) {
     SDL_SetRenderDrawColor(RENDERER, 255, 255, 255, 255); // default color of the window (white)
 }
 
-
 /*
 Deallocates all SDL-structures that were initialized.
  */
@@ -228,25 +229,24 @@ void free_gui() {
     SDL_Quit(); // closes SDL
 }
 
-
 /*
 Loads all the images and converts them to textures.
  */
 void initialize_textures() {
 
     SDL_Surface *images_array[AMOUNT_OF_TEXTURES] = {
-        SDL_LoadBMP("Images/0.bmp"),
-        SDL_LoadBMP("Images/1.bmp"),
-        SDL_LoadBMP("Images/2.bmp"),
-        SDL_LoadBMP("Images/3.bmp"),
-        SDL_LoadBMP("Images/4.bmp"),
-        SDL_LoadBMP("Images/5.bmp"),
-        SDL_LoadBMP("Images/6.bmp"),
-        SDL_LoadBMP("Images/7.bmp"),
-        SDL_LoadBMP("Images/8.bmp"),
-        SDL_LoadBMP("Images/covered.bmp"),
-        SDL_LoadBMP("Images/flagged.bmp"),
-        SDL_LoadBMP("Images/mine.bmp")};
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "0.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "1.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "2.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "3.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "4.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "5.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "6.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "7.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "8.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "covered.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "flagged.bmp")),
+        SDL_LoadBMP(strcat(IMAGES_FOLDER, "mine.bmp"))};
 
     for (int i = 0; i < AMOUNT_OF_TEXTURES; i++) {
         if ((TEXTURES_ARRAY[i] = SDL_CreateTextureFromSurface(RENDERER, images_array[i])) == NULL) {
@@ -255,7 +255,6 @@ void initialize_textures() {
         SDL_FreeSurface(images_array[i]);
     }
 }
-
 
 /*
 Initializes the window and the textures of the images that will be displayed. 

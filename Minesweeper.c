@@ -116,11 +116,10 @@ int main(int argc, const char *argv[]) {
     if (GAME_WON) {
         printf("\nYOU WON! GOOD JOB!\n");
         draw_field(playing_field, TRUE);
-        read_input();
     }
     if (GAME_OVER) {
         printf("\nGAME OVER!\n");
         draw_field(playing_field, TRUE);
-        read_input();
     }
+    handle_game_end();
 }

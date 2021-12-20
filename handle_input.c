@@ -22,7 +22,7 @@ This function returns 1 if everything went well, otherwise it returns 0 so that 
 */
 int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
     enum Boolean can_continue = TRUE;
-    int provided_options = 0; 
+    int provided_options = 0;
     char opt;
     while ((--argc > 0) && (**++argv == '-')) {
         if ((opt = *++*argv) == '\0') {
@@ -112,7 +112,7 @@ void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, 
     }                                   //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
 }
 
-enum Boolean player_wants_to_replay() {
-    printf("Press ENTER if you want to replay!\n");
+int handle_game_end() {
+    printf("Press ENTER to exit the game session!\n");
     getchar() == '\n';
 }
