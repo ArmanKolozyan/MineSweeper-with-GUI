@@ -10,10 +10,8 @@
 #include "gui.h"
 #include "handle_input.h"
 #include "encoder_decoder.h"
-#include "macros.h"
 #include <stdio.h>
-#include <stdlib.h> // for the rand- & srand-function
-#include <string.h> // for the strcpy-function
+#include <stdlib.h> // for the rand-function & srand-function
 #include <time.h>   // for the time-function (needed for seeding the random-generator)
 
 int ROWS;

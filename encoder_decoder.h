@@ -2,7 +2,6 @@
 #define encoder_decoder
 
 #include "datatypes.h"
-#include <stdio.h>
 
 extern int ROWS;
 extern int COLUMNS;

@@ -3,7 +3,6 @@
 
 
 #include "datatypes.h"
-#include "macros.h"
 
 void call_the_drawer(struct cell (*playing_field)[]);
 void draw_field(struct cell (*playing_field)[], enum Boolean reveal_all);

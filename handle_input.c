@@ -1,14 +1,16 @@
 #include "handle_input.h"
-#include "cell.h"
-#include "macros.h"
 #include <stdio.h>
+#include <stdlib.h> // for the atoi-function
+#include <string.h> // for the strcpy-function
+#include "datatypes.h"
+#include "cell.h" 
 
 extern enum Command USER_COMMAND;
 extern int USER_ROW;
 extern int USER_COLUMN; // later miss beter in een struct
 extern int TOTAL_BOMBS;
-extern const int ROWS;
-extern const int COLUMNS;
+extern int ROWS;
+extern int COLUMNS;
 
 
 /*

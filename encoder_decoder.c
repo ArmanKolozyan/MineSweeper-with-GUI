@@ -8,6 +8,10 @@ first character represents the number of neighbours that are bombs, or 'B' if th
 second character indicates whether the cell is revealed (R), flagged (F), or hidden (H).
 */
 
+#include "encoder_decoder.h"
+#include <stdio.h>
+#include <stdlib.h> // for the atoi-function
+
 extern int TOTAL_BOMBS;
 extern int ROWS;
 extern int COLUMNS;
