@@ -10,6 +10,7 @@
 #include "gui.h"
 #include "handle_input.h"
 #include "macros.h"
+#include <string.h> // for the strcpy-function
 #include <stdio.h>
 #include <stdlib.h> // for the rand- & srand-function
 #include <string.h> // for the strcpy-function
