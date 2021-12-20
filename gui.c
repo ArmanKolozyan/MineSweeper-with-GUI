@@ -1,6 +1,7 @@
 #include "gui.h"
 #include <SDL2/SDL.h> // for the SDL2-functions
 #include <stdio.h>
+#include <stdlib.h> // for the rand-function
 #include <stdlib.h>
 
 /*
@@ -23,10 +24,12 @@ extern int COLUMNS;
 
 /*
 The variables below represent the player's events.
+The row and column chosen by the player is initially a random number. Since when installing the mines we prevent the player from immediately, 
+in the first turn, stepping on a mine and losing the game, this ensures that the function runs correctly even though the player's first command is the print command.
 */
 enum Command USER_COMMAND;
-int USER_ROW;
-int USER_COLUMN;
+int USER_ROW = rand() % ROWS;
+int USER_COLUMN = rand() % COLUMNS;
 
 /*
 This renderer is used to draw figures in the window. 

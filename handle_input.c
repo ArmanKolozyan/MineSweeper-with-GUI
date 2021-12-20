@@ -2,11 +2,10 @@
 #include "cell.h"
 #include "macros.h"
 #include <stdio.h>
-#include <unistd.h> //for the sleep-function
 
 extern enum Command command;
 extern int user_row;
-extern int user_column; // later miss beter in een struct
+extern int user_column; // later miss beter in een struct !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 extern const int ROWS;
 extern const int COLUMNS;
 

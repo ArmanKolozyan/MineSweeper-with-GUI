@@ -10,19 +10,17 @@
 #include "gui.h"
 #include "handle_input.h"
 #include "macros.h"
-#include "printing.h"
 #include <stdio.h>
-#include <stdlib.h> // for the rand- & srand-functions
-#include <time.h>   // for the time-function
-#include <unistd.h> //for the sleep-function
+#include <stdlib.h> // for the rand- & srand-function
+#include <string.h> // for the strcpy-function
+#include <time.h>   // for the time-function (needed for seeding the random-generator)
 
-extern int user_row;
-extern int user_column;
-extern int should_continue;
-int ROWS = 10;
-int COLUMNS = 10;
-int TOTAL_BOMBS = 10;
-char filename[50];
+int ROWS;
+int COLUMNS;
+int TOTAL_BOMBS;
+extern int USER_ROW;
+extern int USER_COLUMN;
+extern int SHOULD_CONTINUE;
 
 /*
 2 global variables that are modified by external functions (see cell.c) when the player has won/lost.
@@ -32,6 +30,7 @@ enum Boolean GAME_WON;
 
 /* 
 Fills the 2D array (defined in the main function) with structs and gives default values to the struct members.
+This function is only called when the user wants to start a new session from scratch and doesn't want to load the game from a file.
 */
 void initialize_field(struct cell playing_field[ROWS][COLUMNS]) {
     for (int i = 0; i < ROWS; i++) {
@@ -46,7 +45,7 @@ void initialize_field(struct cell playing_field[ROWS][COLUMNS]) {
 }
 
 /* 
-Places the number of bombs specified in "macros.h".
+Places the number of bombs specified by the user.
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, this function receives the 
 row and column of the first call of reveal/flag. If the first call is a print, then it receives a random row and column.
 */
@@ -56,7 +55,7 @@ void install_bombs(struct cell playing_field[ROWS][COLUMNS]) {
     while (placed_bombs != TOTAL_BOMBS) {
         int bomb_row = rand() % ROWS;
         int bomb_column = rand() % COLUMNS;
-        if ((bomb_row != user_row) || (bomb_column != user_column)) {
+        if ((bomb_row != USER_ROW) || (bomb_column != USER_COLUMN)) {
             struct cell *bomb_cell = &playing_field[bomb_row][bomb_column];
             if (!bomb_cell->bomb) { // to ensure that all bombs are placed in different cells
                 bomb_cell->bomb = TRUE;
@@ -66,21 +65,47 @@ void install_bombs(struct cell playing_field[ROWS][COLUMNS]) {
     }
 }
 
-void decode(FILE *fp, struct cell playing_field[ROWS][COLUMNS]) {
+/*
+Decodes and installs the state of the game that is stored in the given file.
+The state of the game is expected to be in the following format: 
+first four lines represent the width, height, number of placed flags and number of correctly placed flags respectively.
+Next are all the lines that represent the state of each cell, where each line consists of two characters, viz:
+first character represents the number of neighbours that are bombs, or 'B' if the cell is a bomb
+second character indicates whether the cell is revealed (R), flagged (F), or hidden (H).
+*/
+void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
+
+    /*
+    This buffer will not be cleared after every call to fgets because
+    at every write to this buffer, a '\0' character is put at the end
+    and every read/call to atoi stops at the '\0' character.
+    It is of size 4 to provide enough space for: first & second character, newline character & the terminating null character.
+    */
+    char input_buffer[4];
+
+    FILE *fp;
+    fp = fopen(filename, "r");
+
+    fscanf(fp, "%d ", &ROWS);                     // read the number of rows
+    fscanf(fp, "%d ", &COLUMNS);                  // read the number of columns
+    fgets(input_buffer, sizeof input_buffer, fp); // reads the number of placed flags
+    *placed_flags = atoi(input_buffer);
+    fgets(input_buffer, sizeof input_buffer, fp); // reads the number of correctly placed flags
+    *correct_placed_flags = atoi(input_buffer);
+
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLUMNS; j++) {
             struct cell *current_cell = &playing_field[i][j];
-            char buf[4];
-            fgets(buf, sizeof buf, fp);
-            char curr = buf[0];
+            fgets(input_buffer, sizeof input_buffer, fp);
+            char curr = input_buffer[0];
             if (curr == 'B') {
                 current_cell->neighbours_count = 0;
                 current_cell->bomb = TRUE;
             } else {
-                current_cell->neighbours_count = curr - '0';
+                current_cell->neighbours_count = curr - '0'; // to get the actual number that represents the neighbours-count
                 current_cell->bomb = FALSE;
             }
-            curr = buf[1];
+            curr = input_buffer[1];
             switch (curr) {
             case 'R':
                 current_cell->revealed = TRUE;
@@ -96,15 +121,7 @@ void decode(FILE *fp, struct cell playing_field[ROWS][COLUMNS]) {
             }
         }
     }
-}
-
-struct cell *make_cell(void) {
-    struct cell *cell = malloc(sizeof(struct cell));
-    cell->bomb = FALSE;
-    cell->revealed = FALSE;
-    cell->flagged = FALSE;
-    cell->neighbours_count = 0;
-    return cell;
+    fclose(fp);
 }
 
 /*
@@ -131,12 +148,24 @@ void deallocate_field(struct cell playing_field[ROWS][COLUMNS]) {
     free(playing_field);
 }
 
-void encode(struct cell playing_field[ROWS][COLUMNS]) {
+/*
+Encodes the game state into a file named "state.txt".
+The state of the game is written in the following format: 
+first four lines represent the width, height, number of placed flags and number of correctly placed flags respectively.
+Next are all the lines that represent the state of each cell, where each line consists of two characters, viz:
+first character represents the number of neighbours that are bombs, or 'B' if the cell is a bomb
+second character indicates whether the cell is revealed (R), flagged (F), or hidden (H).
+*/
+void encode(struct cell playing_field[ROWS][COLUMNS], int placed_flags, int correct_placed_flags) {
     FILE *fp;
     fp = fopen("state.txt", "w");
-    fprintf(fp, "%d", 10);
+    fprintf(fp, "%d", ROWS);
     fputc('\n', fp);
-    fprintf(fp, "%d", 10);
+    fprintf(fp, "%d", COLUMNS);
+    fputc('\n', fp);
+    fprintf(fp, "%d", placed_flags);
+    fputc('\n', fp);
+    fprintf(fp, "%d", correct_placed_flags);
     fputc('\n', fp);
     fclose(fp);
     for (int i = 0; i < ROWS; i++) {
@@ -170,6 +199,7 @@ the first command is handled separately to ensure that the first given row and c
 */
 void initialize(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
     initialize_field(playing_field);
+    initialize_gui();
     draw_field(playing_field, FALSE);
     read_input();
     install_bombs(playing_field);
@@ -178,7 +208,13 @@ void initialize(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int
     call_the_drawer(playing_field);
 }
 
-void get_initial_arguments(int argc, const char *argv[]) {
+/*
+The program can be started in two ways. It is both possible to load a saved playfield and continue with it, and to simply start from a new field with given dimensions. 
+If the state of the game is stored in a file called "state.txt", then the player can load the game using the following command: ./MineSweeper -f state.txt
+On the other hand, the player can also start a new playfield with width 20 and height 10 that contains 15 mines, by executing the following command: ./MineSweeper -w 20 -h 10 -m 15.
+These three arguments can be entered in any order.
+*/
+void get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
     int can_continue, opt;
     while ((--argc > 0) && (**++argv == '-') && can_continue)
         while ((opt = *++*argv) != '\0') {
@@ -212,63 +248,47 @@ void get_initial_arguments(int argc, const char *argv[]) {
                 COLUMNS = atoi(columns_input);
                 strcpy(filename, *argv);
                 can_continue = 0;
+                *file_flag = TRUE;
                 break;
             default:
                 printf("illegal option %c\n", opt);
-                argc = 0;
+                can_continue = 0;
                 break;
             }
             if ((ROWS == -2) || (COLUMNS == -2) || (TOTAL_BOMBS == -2)) {
-                // hier error message printen
+                printf("Usage: find -x -n pattern\n");
                 can_continue = 0;
             }
             break;
         }
 }
 
-//  printf("  Enter the number of rows: ");
-//   scanf("%u", &ROWS);
-//   printf("Enter the number of colums: ");
-//   scanf("%u", &COLUMNS);
-//   while (ROWS < 1 || COLUMNS < 1) {
-//       printf("Number of rows or columns cannot be below 1.\nPlease try again...\n");
-//      printf("  Enter the number of rows: ");
-//      scanf("%u", &ROWS);
-//      printf("Enter the number of colums: ");
-//     scanf("%u", &COLUMNS);
-
 int main(int argc, const char *argv[]) {
-#define MAXLINE 1000
-    int getline2(char s[], int lim);
-    char get_char();
-    char line[MAXLINE];
-    long lineno = 0;
     GAME_WON = FALSE;
-    GAME_OVER = FALSE;
-    get_initial_arguments(argc, argv);
-    struct cell(*playing_field)[ROWS] = malloc(sizeof(struct cell[ROWS][COLUMNS]));
-    int placed_flags = 0;         // dit ook bijhouden waarschijnlijk!!!!!!
+    GAME_OVER = FALSE; //To initialize the variables when starting a new game-session.
+
+    const int filaneme_size = 50;
+    char filename[filaneme_size];
+    enum Boolean file_flag = FALSE;
+
+    get_initial_arguments(argc, argv, filename, &file_flag);
+
+    struct cell(*playing_field)[COLUMNS] = malloc(sizeof(struct cell[ROWS][COLUMNS]));
+    int placed_flags = 0;
     int correct_placed_flags = 0; // if correct_placed_flags == TOTAL_BOMBS => the player has won
-   /* FILE *fp;
-    fp = fopen(filename, "r");
-    char rows_input[5];
-    char columns_input[5];
-    fgets(rows_input, sizeof rows_input, fp);
-    fgets(columns_input, sizeof columns_input, fp);
-    ROWS = atoi(rows_input);
-    COLUMNS = atoi(columns_input);
-    decode(fp, playing_field);
-    fclose(fp);
-    */
-    initialize_gui();
-  //  call_the_drawer(playing_field);
-    initialize(playing_field, &placed_flags, &correct_placed_flags);
-    while (!GAME_OVER && !GAME_WON && should_continue) {
+
+    if (file_flag) {
+        decode(filename, playing_field, placed_flags, correct_placed_flags);
+        initialize_gui();
+        call_the_drawer(playing_field);
+    } else {
+        initialize(playing_field, &placed_flags, &correct_placed_flags);
+    }
+
+    while (!GAME_OVER && !GAME_WON && SHOULD_CONTINUE) {
         read_input();
         process_input(playing_field, &placed_flags, &correct_placed_flags);
-        if (!GAME_OVER && !GAME_WON) { // to ensure that in case of a win or loss (determined by the above "process_input"), the field is not printed twice
-            call_the_drawer(playing_field);
-        }
+        call_the_drawer(playing_field);
     }
     // after winning/losing the game, the whole revealed field is printed
     if (GAME_WON) {
