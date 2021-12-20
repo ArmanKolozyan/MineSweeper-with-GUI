@@ -112,7 +112,9 @@ void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, 
     }                                   //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
 }
 
-int handle_game_end() {
+void handle_game_end() {
     printf("Press ENTER to exit the game session!\n");
-    getchar() == '\n';
+    while (getchar() != '\n') {
+
+    }
 }

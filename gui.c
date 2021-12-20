@@ -5,11 +5,6 @@
 #include <string.h> // for the strcat-function
 
 /*
-The folder where images are stored. 
-*/
-#define IMAGES_FOLDER "Images/"
-
-/*
 The height and width (in pixels) of the cell-images that are displayed in the playing field.
  */
 #define IMAGE_HEIGHT 50
@@ -235,18 +230,18 @@ Loads all the images and converts them to textures.
 void initialize_textures() {
 
     SDL_Surface *images_array[AMOUNT_OF_TEXTURES] = {
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "0.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "1.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "2.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "3.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "4.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "5.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "6.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "7.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "8.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "covered.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "flagged.bmp")),
-        SDL_LoadBMP(strcat(IMAGES_FOLDER, "mine.bmp"))};
+        SDL_LoadBMP("Images/0.bmp"),
+        SDL_LoadBMP("Images/1.bmp"),
+        SDL_LoadBMP("Images/2.bmp"),
+        SDL_LoadBMP("Images/3.bmp"),
+        SDL_LoadBMP("Images/4.bmp"),
+        SDL_LoadBMP("Images/5.bmp"),
+        SDL_LoadBMP("Images/6.bmp"),
+        SDL_LoadBMP("Images/7.bmp"),
+        SDL_LoadBMP("Images/8.bmp"),
+        SDL_LoadBMP("Images/covered.bmp"),
+        SDL_LoadBMP("Images/flagged.bmp"),
+        SDL_LoadBMP("Images/mine.bmp")};
 
     for (int i = 0; i < AMOUNT_OF_TEXTURES; i++) {
         if ((TEXTURES_ARRAY[i] = SDL_CreateTextureFromSurface(RENDERER, images_array[i])) == NULL) {

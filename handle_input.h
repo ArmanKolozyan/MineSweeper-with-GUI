@@ -5,6 +5,6 @@
 
 int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag);
 void process_input(struct cell (*playing_field)[], int *placed_flags, int *correct_placed_flags);
-enum Boolean handle_game_end();
+void handle_game_end();
 
 #endif

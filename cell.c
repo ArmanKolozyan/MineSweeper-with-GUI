@@ -1,5 +1,4 @@
 #include "cell.h"
-#include "macros.h"
 #include <stdio.h>
 
 extern int ROWS;
