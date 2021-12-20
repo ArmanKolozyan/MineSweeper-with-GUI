@@ -6,79 +6,66 @@
 extern enum Command USER_COMMAND;
 extern int USER_ROW;
 extern int USER_COLUMN; // later miss beter in een struct
+extern int TOTAL_BOMBS;
 extern const int ROWS;
 extern const int COLUMNS;
 
-/*
-When the user types its command and presses Enter, it will sometimes leave some input (like '\n' voor example) in the input buffer. 
-In such cases, it is necessary to clear the input buffer for the next input. 
-*/
-void clear_input() {
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF) { //getchar() returns EOF in the event of a read error, so the loop should test for EOF also
-        ;
-    }
-}
 
 /*
-Checks if the given column/row is not outisde the field.
+The program can be started in two ways. It is both possible to load a saved playfield and continue with it, and to simply start from a new field with given dimensions. 
+If the state of the game is stored in a file called "state.txt", then the player can load the game using the following command: ./MineSweeper -f state.txt
+On the other hand, the player can also start a new playfield with width 20 and height 10 that contains 15 mines, by executing the following command: ./MineSweeper -w 20 -h 10 -m 15.
+These three arguments can be entered in any order.
 */
-enum Boolean check_boundaries(int USER_ROW, int USER_COLUMN) {
-    return ((USER_ROW >= 0) && (USER_ROW < ROWS) && (USER_COLUMN >= 0) && (USER_COLUMN < COLUMNS));
+void get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
+    int can_continue = 1, opt;
+    while ((--argc > 0) && (**++argv == '-') && can_continue)
+        while ((opt = *++*argv) != '\0') {
+            switch (opt) {
+            case 'w':
+                argv++;
+                --argc;
+                ROWS = atoi(*argv);
+                break;
+            case 'h':
+                argv++;
+                --argc;
+                COLUMNS = atoi(*argv);
+                break;
+            case 'm':
+                argv++;
+                --argc;
+                TOTAL_BOMBS = atoi(*argv);
+                break;
+            case 'f':
+                argv++;
+                --argc;
+                FILE *fp;
+                fp = fopen(*argv, "r");
+                char rows_input[5];
+                char columns_input[5];
+                fgets(rows_input, sizeof rows_input, fp);
+                fgets(columns_input, sizeof columns_input, fp);
+                fclose(fp);
+                ROWS = atoi(rows_input);
+                COLUMNS = atoi(columns_input);
+                strcpy(filename, *argv);
+                can_continue = 0;
+                *file_flag = TRUE;
+                break;
+            default:
+                printf("illegal option %c\n", opt);
+                can_continue = 0;
+                break;
+            }
+            if ((ROWS == -2) || (COLUMNS == -2) || (TOTAL_BOMBS == -2)) {
+                printf("Usage: find -x -n pattern\n");
+                can_continue = 0;
+            }
+            break;
+        }
 }
 
-/*
-"get_arguments" returns TRUE if everything went right (i.e. two numbers between the boundaries were provided), otherwise it returns FALSE.
-*/
-enum Boolean get_arguments(int *USER_ROW, int *USER_COLUMN) {
-    const int expecting_arguments = 2; // if the players provides more than 2 arguments, the first 2 arguments are taken
-    if (scanf("%i %i", USER_ROW, USER_COLUMN) != expecting_arguments) {
-        printf("Please provide numbers as arguments.\n"); // because scanf() returns the number of fields that were successfully converted and assigned
-        clear_input();
-        sleep(2);
-        return FALSE;
-    };
-    if (check_boundaries(*USER_ROW, *USER_COLUMN)) {
-        clear_input();
-        return TRUE;
-    } else {
-        printf("Input is out of bounds! Try again.\n");
-        clear_input();
-        sleep(2);
-        return FALSE;
-    }
-}
-
-/*
-"get_input" makes sure that "command", "USER_ROW" and "USER_COLUMN" contain (correct) values given by the player.
-// */
-// void get_input(struct cell playing_field[ROWS][COLUMNS]) {
-//     printf("Write your command: \n");
-//     char after_command;
-//     *command = getchar();
-//     after_command = getchar(); // is necessary to recognize erroneous input
-// 
-//     if (*command == PRINT && after_command == '\n') {
-//         ;
-//     } else if ((*command == REVEAL || *command == FLAG) && after_command == ' ') {
-//         if (!get_arguments(USER_ROW, USER_COLUMN)) {
-//             get_input(playing_field, command, USER_ROW, USER_COLUMN);
-//         }
-//     } else if ((*command == REVEAL || *command == FLAG) && after_command == '\n') {
-//         printf("Please provide arguments after the command!\n");
-//         sleep(2);
-//         get_input(playing_field, command, USER_ROW, USER_COLUMN);
-//     } else {
-//         printf("Wrong command! Try again.\n");
-//         sleep(2);
-//         clear_input();
-//         get_input(playing_field, command, USER_ROW, USER_COLUMN);
-//     }
-// }
-// 
-/*
-"process_input" makes sure that, depending on the command, the correct action is performed.
-*/
 void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
     if (USER_COMMAND == REVEAL) {
         reveal(playing_field, USER_ROW, USER_COLUMN, placed_flags, correct_placed_flags);
@@ -88,10 +75,11 @@ void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, 
     }                               //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
 }
 
-// enum Boolean handle_replay() {
-//     printf("Press ENTER if you want to replay!\n");
-//     getchar() == '\n';
-// }
+
+ enum Boolean player_wants_to_replay() {
+     printf("Press ENTER if you want to replay!\n");
+     getchar() == '\n';
+ }
 
 
 

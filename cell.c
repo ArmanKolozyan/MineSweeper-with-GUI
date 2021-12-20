@@ -1,7 +1,6 @@
 #include "cell.h"
 #include "macros.h"
 #include <stdio.h>
-#include <unistd.h> //for the sleep-function
 
 extern int ROWS;
 extern int COLUMNS;
@@ -56,7 +55,6 @@ void place_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_fl
     if (!the_cell->flagged) {
         if (the_cell->revealed) {
             printf("Action cannot be done. Cell is revealed.\n");
-            sleep(2);
         } else if (*placed_flags < TOTAL_BOMBS) {
             the_cell->flagged = TRUE;
             (*placed_flags)++; // brackets are necessary since "++"" has higher precedence than "*"
@@ -85,7 +83,6 @@ void reveal(struct cell playing_field[ROWS][COLUMNS], int row, int column, int *
         GAME_OVER = 1;
     } else if (the_cell->revealed) {
         printf("Cell is already revealed!\n");
-        //     sleep(2);
     } else {
         the_cell->revealed = TRUE;
         remaining_nonbomb_cells--;
