@@ -97,7 +97,7 @@ int main(int argc, const char *argv[]) {
 
     struct cell **playing_field = malloc(rows * sizeof(struct cell *));
     for (int i = 0; i < rows; i++) {
-        array[i] = malloc(columns * sizeof(struct cell));
+        playing_field[i] = malloc(columns * sizeof(struct cell));
     }
 
     if (file_option) { // user wants to start game session from own file
