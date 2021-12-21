@@ -1,5 +1,5 @@
 all: main.o cell.o handle_input.o gui.o encoder_decoder.o
-	gcc main.o cell.o handle_input.o gui.o encoder_decoder.o -lSDL2 -Wall -o MineSweeper
+	gcc main.o cell.o handle_input.o gui.o encoder_decoder.o -lSDL2 -o MineSweeper
 
 main.o: Minesweeper.c cell.h datatypes.h handle_input.h gui.h encoder_decoder.h
 	gcc Minesweeper.c -c -o main.o 
@@ -7,7 +7,7 @@ main.o: Minesweeper.c cell.h datatypes.h handle_input.h gui.h encoder_decoder.h
 cell.o: cell.c cell.h datatypes.h
 	gcc cell.c -c -o cell.o 
 
-handle_input.o: handle_input.c handle_input.h cell.h datatypes.h gui.h
+handle_input.o: handle_input.c handle_input.h cell.h datatypes.h
 	gcc handle_input.c -c -o handle_input.o 
 
 gui.o: gui.c gui.h datatypes.h 

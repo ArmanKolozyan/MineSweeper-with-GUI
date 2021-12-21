@@ -67,6 +67,10 @@ int is_relevant_event(SDL_Event *event) {
            (event->type == SDL_QUIT);
 }
 
+/*
+Gives the main-function access to the user-input information 
+to avoid the usage of global variables.
+*/
 struct user_input *provide_user_input(void) {
     return &USER_INPUT;
 }
@@ -80,10 +84,6 @@ void reset_command(void) {
     if (USER_INPUT.command != PRINT) {
         USER_INPUT.command = NOTHING;
     }
-}
-
-void provide_user_input(struct user_input *input_struct) {
-    input_struct = &USER_INPUT;
 }
 
 /*

@@ -100,7 +100,7 @@ int main(int argc, const char *argv[]) {
     const int max_filename_size = 50;
     char filename[max_filename_size];
     enum Boolean file_option = FALSE;
-    int total_bombs;
+    int total_bombs = 0;
     struct game_board game_board;
     struct flags_info flags_info;
     struct user_input *user_input = provide_user_input();
