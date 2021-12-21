@@ -37,7 +37,7 @@ static int WINDOW_WIDTH;
 The variable below represent the player's events.
 The struct members are: row, column and command of the user.
 */
-struct user_input USER_INPUT;
+static struct user_input USER_INPUT;
 
 /*
 This renderer is used to draw figures in the window. 
@@ -82,6 +82,10 @@ void reset_command(void) {
     if (USER_INPUT.command != PRINT) {
         USER_INPUT.command = NOTHING;
     }
+}
+
+void provide_user_input(struct user_input *input_struct) {
+    input_struct = &USER_INPUT;
 }
 
 /*
