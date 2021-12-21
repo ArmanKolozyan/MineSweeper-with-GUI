@@ -97,7 +97,7 @@ void process_input(struct game_board *game_board, int total_bombs, struct flags_
     if (user_input->command == REVEAL) {
         reveal(game_board, user_input->row, user_input->column, flags_info);
     } else if (user_input->command == FLAG) {
-        place_flag(game_board, flags_info, total_bombs);
+        place_flag(&game_board->playing_field[user_input->row][user_input->column], flags_info, total_bombs);
     } else if (user_input->command == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that
     }
 }

@@ -73,6 +73,10 @@ int is_relevant_event(SDL_Event *event) {
            (event->type == SDL_QUIT);
 }
 
+struct user_input *provide_user_input(void) {
+    return &USER_INPUT;
+}
+
 /*
 This auxiliary procedure is used in read_input to ensure that the command is reset to "nothing". 
 Only if the previous command was the print command we do not need to reset it because read_input 
