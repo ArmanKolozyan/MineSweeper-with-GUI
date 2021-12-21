@@ -37,7 +37,7 @@ static int WINDOW_WIDTH;
 The variable below represent the player's events.
 The struct members are: row, column and command of the user.
 */
-struct user_input USER_INPUT;
+static struct user_input USER_INPUT;
 
 /*
 This renderer is used to draw figures in the window. 
@@ -71,6 +71,10 @@ int is_relevant_event(SDL_Event *event) {
     return (event->type == SDL_MOUSEBUTTONDOWN) ||
            (event->type == SDL_KEYDOWN) ||
            (event->type == SDL_QUIT);
+}
+
+struct user_input *provide_user_input(void) {
+    return &USER_INPUT;
 }
 
 /*

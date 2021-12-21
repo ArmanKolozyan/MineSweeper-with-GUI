@@ -41,13 +41,13 @@ Places the number of bombs specified by the user.
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, this function receives the 
 row and column of the first call of reveal/flag. If the first call is a print, then it receives a random row and column.
 */
-void install_bombs(struct game_board *game_board, int total_bombs) {
+void install_bombs(struct game_board *game_board, int total_bombs, struct user_input *user_input) {
     srand(time(0)); //to seed rand with a starting value
     int placed_bombs = 0;
     while (placed_bombs != total_bombs) {
         int bomb_row = rand() % game_board->rows;
         int bomb_column = rand() % game_board->columns;
-        if ((bomb_row != USER_INPUT.row) || (bomb_column != USER_INPUT.column)) {
+        if ((bomb_row != user_input->row) || (bomb_column != user_input->column)) {
             struct cell *bomb_cell = &game_board->playing_field[bomb_row][bomb_column];
             if (!bomb_cell->bomb) { // to ensure that all bombs are placed in different cells
                 bomb_cell->bomb = TRUE;
@@ -92,14 +92,14 @@ void deallocate_memory(struct game_board *game_board) {
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, 
 the first command is handled separately to ensure that the first given row and column of the player does not contain a mine.
 */
-void initialize(struct game_board *game_board, int total_bombs, struct flags_info *flags_info) {
+void initialize(struct game_board *game_board, int total_bombs, struct flags_info *flags_info, struct user_input *user_input) {
     initialize_field(game_board);
     initialize_gui(game_board->rows, game_board->columns);
     call_the_drawer(game_board);
     read_input();
-    install_bombs(game_board, total_bombs);
+    install_bombs(game_board, total_bombs, user_input);
     calculate_neighbours_bombs(game_board);
-    process_input(game_board, total_bombs, flags_info);
+    process_input(game_board, total_bombs, flags_info, user_input);
 }
 
 int main(int argc, const char *argv[]) {
@@ -109,24 +109,25 @@ int main(int argc, const char *argv[]) {
     int total_bombs;
     struct game_board game_board;
     struct flags_info flags_info;
-
+    struct user_input *user_input;
 
     if (!handle_initial_arguments(argc, argv, &game_board, &total_bombs, filename, &file_option)) { //something went wrong when reading the user-input
         exit(EXIT_FAILURE);
     }
+
+    // dynamic allocation of the playing field
+    struct cell **playing_field = make_field(game_board.rows, game_board.columns);
+
+    user_input = provide_user_input();
 
     /* The row and column chosen by the player are initialized by a random number. 
        Since when installing the mines we prevent the player from immediately, 
        in the first turn, stepping on a mine and losing the game, 
        this ensures that the function runs correctly even though the player's 
        first command is the print command. */
-    USER_INPUT.row = rand() % game_board.rows;
-    USER_INPUT.column = rand() % game_board.columns;
+    user_input->row = rand() % game_board.rows;
+    user_input->column = rand() % game_board.columns;
 
-    // dynamic allocation of the playing field
-    struct cell **playing_field = make_field(game_board.rows, game_board.columns);
-
-    
     flags_info.placed_flags = 0;
     flags_info.correct_placed_flags = 0;
     game_board.playing_field = playing_field;
@@ -135,17 +136,17 @@ int main(int argc, const char *argv[]) {
         decode(&game_board, &total_bombs, filename, &flags_info);
         initialize_gui(game_board.rows, game_board.columns);
     } else {
-        initialize(&game_board, total_bombs, &flags_info);
+        initialize(&game_board, total_bombs, &flags_info, user_input);
     }
 
     printf("Remaining flags: %i\n", total_bombs - flags_info.placed_flags);
 
     // game-loop
-    while (!GAME_OVER && !GAME_WON && USER_INPUT.should_continue) {
+    while (!GAME_OVER && !GAME_WON && user_input->should_continue) {
         encode(&game_board, &flags_info);
         call_the_drawer(&game_board);
         read_input();
-        process_input(&game_board, total_bombs, &flags_info);
+        process_input(&game_board, total_bombs, &flags_info, user_input);
     }
 
     // after winning/losing the game, the whole revealed field is drawn
@@ -158,7 +159,7 @@ int main(int argc, const char *argv[]) {
         draw_field(&game_board, TRUE);
     }
 
-    while (USER_INPUT.should_continue)
+    while (user_input->should_continue)
         read_input();
 
     // memory deallocation

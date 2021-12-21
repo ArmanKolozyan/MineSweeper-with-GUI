@@ -93,11 +93,11 @@ int handle_initial_arguments(int argc, const char *argv[], struct game_board *ga
     }
 }
 
-void process_input(struct game_board *game_board, int total_bombs, struct flags_info *flags_info) {
-    if (USER_INPUT.command == REVEAL) {
-        reveal(game_board, USER_INPUT.row, USER_INPUT.column, flags_info);
-    } else if (USER_INPUT.command == FLAG) {
-        place_flag(&game_board->playing_field[USER_INPUT.row][USER_INPUT.column], flags_info, total_bombs);
-    } else if (USER_INPUT.command == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that
+void process_input(struct game_board *game_board, int total_bombs, struct flags_info *flags_info, struct user_input *user_input) {
+    if (user_input->command == REVEAL) {
+        reveal(game_board, user_input->row, user_input->column, flags_info);
+    } else if (user_input->command == FLAG) {
+        place_flag(&game_board->playing_field[user_input->row][user_input->column], flags_info, total_bombs);
+    } else if (user_input->command == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that
     }
 }
