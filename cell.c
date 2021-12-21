@@ -5,7 +5,7 @@ static int remaining_nonbomb_cells;
 extern enum Boolean GAME_WON;
 extern enum Boolean GAME_OVER;
 
-void calculate_neighbours_bombs(int rows, int columns, struct cell playing_field[rows][columns]) {
+void calculate_neighbours_bombs(int rows, int columns, struct cell **playing_field) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
@@ -74,7 +74,7 @@ void place_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_fl
 If a cell is revealed that does not contain a mine in any of its neighbouring cells, all those neighbouring cells are revealed too. This process also repeats for each of these neighbours 
 whose neighbours_count equals zero.
 */
-void reveal_neighbours(int rows, int columns, struct cell playing_field[rows][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
+void reveal_neighbours(int rows, int columns, struct cell **playing_field, int row, int column, int *placed_flags, int *correct_placed_flags) {
     for (int off_i = -1; off_i <= 1; off_i++) {
         for (int off_j = -1; off_j <= 1; off_j++) { // checking all the neighbours
             int neighbour_i = row + off_i;
@@ -96,7 +96,7 @@ void reveal_neighbours(int rows, int columns, struct cell playing_field[rows][co
     }
 }
 
-void reveal(int rows, int columns, struct cell playing_field[rows][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
+void reveal(int rows, int columns, struct cell **playing_field, int row, int column, int *placed_flags, int *correct_placed_flags) {
     struct cell *the_cell = &playing_field[row][column];
     if (the_cell->flagged) {
         remove_flag(the_cell, placed_flags, correct_placed_flags); // personal choice: if the player wants to reveal a flagged cell, the flag is given back to the player before the reveal

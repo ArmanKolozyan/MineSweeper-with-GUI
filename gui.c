@@ -126,7 +126,7 @@ void read_input() {
 /* 
 Calls the "draw_field" function to draw the field. 
 */
-void call_the_drawer(int rows, int columns, struct cell playing_field[rows][columns]) {
+void call_the_drawer(int rows, int columns, struct cell **playing_field) {
     if (USER_INPUT.command == PRINT) {
         draw_field(rows, columns, playing_field, TRUE);
     } else {
@@ -137,7 +137,7 @@ void call_the_drawer(int rows, int columns, struct cell playing_field[rows][colu
 /*
 Draws the playing field.
 */
-void draw_field(int rows, int columns, struct cell playing_field[rows][columns], enum Boolean reveal_all) {
+void draw_field(int rows, int columns, struct cell **playing_field, enum Boolean reveal_all) {
 
     SDL_RenderClear(RENDERER);
     for (int i = 0; i < rows; i++) {

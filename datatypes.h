@@ -31,4 +31,16 @@ struct user_input {
     enum Boolean should_continue;
 };
 
+struct game_board {
+    struct cell **playing_field;
+    int rows;
+    int columns;
+};
+
+struct flags_info {
+    int placed_flags;
+    int correct_placed_flags;
+};
+
+
 #endif
