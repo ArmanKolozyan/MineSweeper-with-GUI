@@ -4,7 +4,7 @@
 
 #include "datatypes.h"
 
-void call_the_drawer(int rows, int columns, struct cell **playing_field);
+void call_the_drawer(struct game_board *game_board);
 void draw_field(int rows, int columns, struct cell **playing_field, enum Boolean reveal_all);
 void initialize_gui(int rows, int columns);
 void read_input();

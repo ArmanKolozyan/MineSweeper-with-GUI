@@ -15,9 +15,51 @@ second character indicates whether the cell is revealed (R), flagged (F), or hid
 #define ENCODE_FILENAME "gamestate.txt"
 
 /*
+Encodes the game state into a file named "gamestate.txt".
+*/
+void encode(struct game_board *game_board, struct flags_info *flags_info) {
+    FILE *fp;
+    fp = fopen(ENCODE_FILENAME, "w");
+    fprintf(fp, "%d", &game_board->rows);
+    fputc('\n', fp);
+    fprintf(fp, "%d", &game_board->columns);
+    fputc('\n', fp);
+    fprintf(fp, "%d", &flags_info->placed_flags);
+    fputc('\n', fp);
+    fprintf(fp, "%d", &flags_info->correct_placed_flags);
+    fputc('\n', fp);
+    ;
+    for (int i = 0; i < game_board->rows; i++) {
+        for (int j = 0; j < game_board->columns; j++) {
+            struct cell *current_cell = game_board->playing_field[i][j];
+            if (!current_cell->bomb) {
+                int neighbours_count = current_cell->neighbours_count;
+                fprintf(fp, "%d", neighbours_count);
+            } else {
+                char status = 'B';
+                fputc(status, fp);
+            }
+            if (current_cell->revealed) {
+                char status = 'R';
+                fputc(status, fp);
+            } else if (current_cell->flagged) {
+                char status = 'F';
+                fputc(status, fp);
+            } else {
+                char status = 'H';
+                fputc(status, fp);
+            }
+            fputc('\n', fp);
+        }
+    }
+    fclose(fp);
+}
+
+
+/*
 Decodes the state of the game given the filename.
 */
-void decode(int *rows, int *columns, struct cell **playing_field, int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags) {
+void decode(struct game_board *game_board, int *total_bombs, char *filename, struct flags_info *flags_info) {
 
     /*
     This buffer will not be cleared after every call to fgets because
@@ -34,15 +76,15 @@ void decode(int *rows, int *columns, struct cell **playing_field, int *total_bom
     the rows and columns are already decoded in handle_initial_arguments,
     but it is done here again to make the function more general
     */
-    fscanf(fp, "%d ", rows);                      // read the number of rows
-    fscanf(fp, "%d ", columns);                   // read the number of columns
+    fscanf(fp, "%d ", &game_board->rows);                      // read the number of rows
+    fscanf(fp, "%d ", &game_board->columns);                   // read the number of columns
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of placed flags
-    *placed_flags = atoi(input_buffer);
+    flags_info->placed_flags = atoi(input_buffer);
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of correctly placed flags
-    *correct_placed_flags = atoi(input_buffer);
-    for (int i = 0; i < (*rows); i++) {
-        for (int j = 0; j < (*columns); j++) {
-            struct cell *current_cell = &playing_field[i][j];
+    flags_info->correct_placed_flags = atoi(input_buffer);
+    for (int i = 0; i < game_board->rows; i++) {
+        for (int j = 0; j < game_board->columns; j++) {
+            struct cell *current_cell = game_board->playing_field[i][j];
             fgets(input_buffer, sizeof input_buffer, fp);
             char curr = input_buffer[0];
             if (curr == 'B') {
@@ -67,47 +109,6 @@ void decode(int *rows, int *columns, struct cell **playing_field, int *total_bom
                 current_cell->revealed = FALSE;
                 current_cell->flagged = FALSE;
             }
-        }
-    }
-    fclose(fp);
-}
-
-/*
-Encodes the game state into a file named "gamestate.txt".
-*/
-void encode(int rows, int columns, struct cell **playing_field, int placed_flags, int correct_placed_flags) {
-    FILE *fp;
-    fp = fopen(ENCODE_FILENAME, "w");
-    fprintf(fp, "%d", rows);
-    fputc('\n', fp);
-    fprintf(fp, "%d", columns);
-    fputc('\n', fp);
-    fprintf(fp, "%d", placed_flags);
-    fputc('\n', fp);
-    fprintf(fp, "%d", correct_placed_flags);
-    fputc('\n', fp);
-    ;
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            struct cell *current_cell = &playing_field[i][j];
-            if (!current_cell->bomb) {
-                int neighbours_count = current_cell->neighbours_count;
-                fprintf(fp, "%d", neighbours_count);
-            } else {
-                char status = 'B';
-                fputc(status, fp);
-            }
-            if (current_cell->revealed) {
-                char status = 'R';
-                fputc(status, fp);
-            } else if (current_cell->flagged) {
-                char status = 'F';
-                fputc(status, fp);
-            } else {
-                char status = 'H';
-                fputc(status, fp);
-            }
-            fputc('\n', fp);
         }
     }
     fclose(fp);

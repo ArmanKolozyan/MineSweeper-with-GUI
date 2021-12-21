@@ -4,6 +4,6 @@
 #include "datatypes.h"
 
 void encode(int rows, int columns, struct cell **playing_field, int placed_flags, int correct_placed_flags);
-void decode(int *rows, int *columns, struct cell **playing_field, int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags);
+void encode(struct game_board *game_board, struct flags_info *flags_info);
 
 #endif
