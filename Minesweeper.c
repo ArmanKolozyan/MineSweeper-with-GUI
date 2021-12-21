@@ -24,10 +24,10 @@ enum Boolean GAME_WON;
 Fills the 2D array (defined in the main function) with structs and gives default values to the struct members.
 This function is only called when the user wants to start a new session from scratch and doesn't want to load the game from a file.
 */
-void initialize_field(int rows, int columns, struct cell **playing_field) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            struct cell *current_cell = &playing_field[i][j];
+void initialize_field(struct game_board *game_board) {
+    for (int i = 0; i < game_board->rows; i++) {
+        for (int j = 0; j < game_board->columns; j++) {
+            struct cell *current_cell = &game_board->playing_field[i][j];
             current_cell->bomb = FALSE;
             current_cell->revealed = FALSE;
             current_cell->flagged = FALSE;
@@ -58,22 +58,51 @@ void install_bombs(struct game_board *game_board, int total_bombs, struct user_i
 }
 
 /*
+Dynamically allocates the playing field.
+*/
+struct cell **make_field(int rows, int columns) {
+    struct cell **array2d = (struct cell **)calloc(rows, sizeof(struct cell *)); // struct *cell werkt blijkbaar niet
+    for (int i = 0; i < rows; i++) {
+        array2d[i] = (struct cell *)calloc(columns, sizeof(struct cell));
+    }
+    return array2d;
+}
+
+/*
+Deallocates the dynamically allocated playing field.
+*/
+void deallocate_field(struct game_board *game_board) {
+    for (int i = 0; i < game_board->rows; i++) {
+        free(game_board->playing_field[i]);
+    }
+    free(game_board->playing_field);
+}
+
+/*
+Deallocates all dynamically allocated memory.
+*/
+void deallocate_memory(struct game_board *game_board) {
+    // GUI
+    free_gui();
+    //playing_vield
+    deallocate_field(game_board);
+}
+
+/*
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, 
 the first command is handled separately to ensure that the first given row and column of the player does not contain a mine.
 */
-void initialize(struct game_board *game_board, int total_bombs, int *placed_flags, int *correct_placed_flags, struct user_input *user_input) {
+void initialize(struct game_board *game_board, int total_bombs, struct flags_info *flags_info, struct user_input *user_input) {
     initialize_field(game_board);
     initialize_gui(game_board->rows, game_board->columns);
     call_the_drawer(game_board);
     read_input();
-    install_bombs(game_board, total_bombs, user_input);
+    install_bombs(game_board, total_bombs);
     calculate_neighbours_bombs(game_board);
-    process_input(game_board, total_bombs, placed_flags, correct_placed_flags, user_input);
+    process_input(game_board, total_bombs, flags_info);
 }
 
 int main(int argc, const char *argv[]) {
-    int placed_flags = 0;
-    int correct_placed_flags = 0; // if correct_placed_flags == total_bombs => the player has won
     const int max_filename_size = 50;
     char filename[max_filename_size];
     enum Boolean file_option = FALSE;
@@ -107,39 +136,35 @@ int main(int argc, const char *argv[]) {
     game_board.playing_field = playing_field;
 
     if (file_option) { // user wants to start game session from own file
-        decode(&rows, &columns, playing_field, &total_bombs, filename, &placed_flags, &correct_placed_flags);
-        initialize_gui(rows, columns);
+        decode(&game_board, &total_bombs, filename, &flags_info);
+        initialize_gui(game_board.rows, game_board.columns);
     } else {
         initialize(&game_board, total_bombs, &flags_info, &user_input);
     }
 
-    printf("Remaining flags: %i\n", total_bombs - placed_flags);
+    printf("Remaining flags: %i\n", total_bombs - flags_info.placed_flags);
 
     // game-loop
     while (!GAME_OVER && !GAME_WON && user_input.should_continue) {
         encode(&game_board, &flags_info);
         call_the_drawer(&game_board);
         read_input();
-        process_input(rows, columns, playing_field, total_bombs, &placed_flags, &correct_placed_flags);
+        process_input(&game_board, total_bombs, &flags_info);
     }
 
     // after winning/losing the game, the whole revealed field is drawn
     if (GAME_WON) {
         printf("\nYOU WON! GOOD JOB!\n");
-        draw_field(rows, columns, playing_field, TRUE);
+        draw_field(&game_board, TRUE);
     }
     if (GAME_OVER) {
         printf("\nGAME OVER!\n");
-        draw_field(rows, columns, playing_field, TRUE);
+        draw_field(&game_board, TRUE);
     }
 
     while (user_input.should_continue)
         read_input();
 
     // memory deallocation
-    free_gui();
-    for (int i = 0; i < rows; i++) {
-        free(playing_field[i]);
-    }
-    free(playing_field);
+    deallocate_memory(&game_board);
 }

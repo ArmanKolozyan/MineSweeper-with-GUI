@@ -130,23 +130,23 @@ void read_input() {
 /* 
 Calls the "draw_field" function to draw the field. 
 */
-void call_the_drawer(int rows, int columns, struct cell **playing_field) {
+void call_the_drawer(struct game_board *game_board) {
     if (USER_INPUT.command == PRINT) {
-        draw_field(rows, columns, playing_field, TRUE);
+        draw_field(game_board, TRUE);
     } else {
-        draw_field(rows, columns, playing_field, FALSE);
+        draw_field(game_board, FALSE);
     }
 }
 
 /*
 Draws the playing field.
 */
-void draw_field(int rows, int columns, struct cell **playing_field, enum Boolean reveal_all) {
+void draw_field(struct game_board *game_board, enum Boolean reveal_all) {
 
     SDL_RenderClear(RENDERER);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            struct cell *current_cell = &playing_field[i][j];
+    for (int i = 0; i < game_board->rows; i++) {
+        for (int j = 0; j < game_board->columns; j++) {
+            struct cell *current_cell = &game_board->playing_field[i][j];
             SDL_Rect rectangle = {j * IMAGE_WIDTH, i * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
                 if (current_cell->flagged && !reveal_all) { // sequence of condition checks plays a crucial role, because otherwise a flagged cell would contain the neighbours_count on the screen

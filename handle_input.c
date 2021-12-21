@@ -13,7 +13,7 @@ These three arguments can be entered in any order.
 
 This function returns 1 if everything went well, otherwise it returns 0 so that the game process is stopped.
 */
-int handle_initial_arguments(int argc, const char *argv[], int *rows, int *columns, int *total_bombs, char *filename, enum Boolean *file_flag) {
+int handle_initial_arguments(int argc, const char *argv[], struct game_board *game_board, int *total_bombs, char *filename, enum Boolean *file_flag) {
     enum Boolean can_continue = TRUE;
     int provided_options = 0;
     char opt;
@@ -28,7 +28,7 @@ int handle_initial_arguments(int argc, const char *argv[], int *rows, int *colum
             ++argv;
             --argc;
             ++provided_options;
-            if ((argc < 1) || ((*columns = atoi(*argv)) == 0)) {
+            if ((argc < 1) || ((game_board->columns = atoi(*argv)) == 0)) {
                 printf("Please provide a valid width.\n");
                 printf("You can do this by entering the desired number after the '-w' flag.\n");
                 can_continue = FALSE;
@@ -38,7 +38,7 @@ int handle_initial_arguments(int argc, const char *argv[], int *rows, int *colum
             argv++;
             --argc;
             ++provided_options;
-            if ((argc < 1) || ((*rows = atoi(*argv)) == 0)) {
+            if ((argc < 1) || ((game_board->rows = atoi(*argv)) == 0)) {
                 printf("Please provide a valid height.\n");
                 printf("You can do this by entering the desired number after the '-h' flag.\n");
                 can_continue = FALSE;
@@ -62,8 +62,8 @@ int handle_initial_arguments(int argc, const char *argv[], int *rows, int *colum
             if ((fp = fopen(*argv, "r")) != NULL) {
                 // we have to read the rows and columns here
                 // so that the dynamic allocation can be done after this function
-                fscanf(fp, "%d ", rows);    // read the number of rows
-                fscanf(fp, "%d ", columns); // read the number of columns
+                fscanf(fp, "%d ", &game_board->rows);    // read the number of rows
+                fscanf(fp, "%d ", &game_board->columns); // read the number of columns
                 fclose(fp);
                 strcpy(filename, *argv);
                 *file_flag = TRUE;

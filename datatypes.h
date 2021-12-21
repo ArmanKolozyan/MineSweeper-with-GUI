@@ -39,7 +39,7 @@ struct game_board {
 
 struct flags_info {
     int placed_flags;
-    int correct_placed_flags;
+    int correct_placed_flags; // if correct_placed_flags == total_bombs => the player has won
 };
 
 
