@@ -53,6 +53,10 @@ int handle_initial_arguments(int argc, const char *argv[], struct game_board *ga
                 printf("You can do this by entering the desired number after the '-m' flag.\n");
                 can_continue = FALSE;
             }
+            if (*total_bombs >= (game_board->rows * game_board->columns)) {
+                printf("Too many mines, please provide less mines.\n");
+                can_continue = FALSE;
+            }
             break;
         case 'f':
             argv++;

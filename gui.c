@@ -46,12 +46,6 @@ The renderer is initialized in the "initialize_window" function.
 static SDL_Renderer *RENDERER;
 
 /*
-The two variables below keep track of the last position where the user clicked.
- */
-static int MOUSE_X = 0;
-static int MOUSE_Y = 0;
-
-/*
 This is the window that will be shown and in which the playing field is displayed. 
 This window is created when initializing the GUI and is aborted when the game ends.
  */
@@ -101,7 +95,7 @@ void read_input() {
     reset_command();
 
     while (!SDL_PollEvent(&event) || !is_relevant_event(&event)) {
-        // do nothing
+        // do nothing while no relevant events
     }
 
     switch (event.type) {

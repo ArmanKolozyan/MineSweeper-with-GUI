@@ -14,12 +14,6 @@
 #include <stdlib.h> // for the rand-function & srand-function
 #include <time.h>   // for the time-function (needed for seeding the random-generator)
 
-/*
-2 global variables that are modified by external functions (see cell.c) when the player has won/lost.
-*/
-enum Boolean GAME_OVER;
-enum Boolean GAME_WON;
-
 /* 
 Fills the 2D array (defined in the main function) with structs and gives default values to the struct members.
 This function is only called when the user wants to start a new session from scratch and doesn't want to load the game from a file.
@@ -109,16 +103,14 @@ int main(int argc, const char *argv[]) {
     int total_bombs;
     struct game_board game_board;
     struct flags_info flags_info;
-    struct user_input *user_input;
+    struct user_input *user_input = provide_user_input();
 
     if (!handle_initial_arguments(argc, argv, &game_board, &total_bombs, filename, &file_option)) { //something went wrong when reading the user-input
         exit(EXIT_FAILURE);
     }
 
     // dynamic allocation of the playing field
-    struct cell **playing_field = make_field(game_board.rows, game_board.columns);
-
-    user_input = provide_user_input();
+    game_board.playing_field = make_field(game_board.rows, game_board.columns);
 
     /* The row and column chosen by the player are initialized by a random number. 
        Since when installing the mines we prevent the player from immediately, 
@@ -127,10 +119,8 @@ int main(int argc, const char *argv[]) {
        first command is the print command. */
     user_input->row = rand() % game_board.rows;
     user_input->column = rand() % game_board.columns;
-
     flags_info.placed_flags = 0;
     flags_info.correct_placed_flags = 0;
-    game_board.playing_field = playing_field;
 
     if (file_option) { // user wants to start game session from own file
         decode(&game_board, &total_bombs, filename, &flags_info);
@@ -142,7 +132,7 @@ int main(int argc, const char *argv[]) {
     printf("Remaining flags: %i\n", total_bombs - flags_info.placed_flags);
 
     // game-loop
-    while (!GAME_OVER && !GAME_WON && user_input->should_continue) {
+    while (!has_player_lost() && !has_player_won() && user_input->should_continue) {
         encode(&game_board, &flags_info);
         call_the_drawer(&game_board);
         read_input();
@@ -150,11 +140,11 @@ int main(int argc, const char *argv[]) {
     }
 
     // after winning/losing the game, the whole revealed field is drawn
-    if (GAME_WON) {
+    if (has_player_won()) {
         printf("\nYOU WON! GOOD JOB!\n");
         draw_field(&game_board, TRUE);
     }
-    if (GAME_OVER) {
+    if (has_player_lost()) {
         printf("\nGAME OVER!\n");
         draw_field(&game_board, TRUE);
     }

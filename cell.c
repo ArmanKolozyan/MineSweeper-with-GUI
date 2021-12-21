@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 static int remaining_nonbomb_cells;
-extern enum Boolean GAME_WON;
-extern enum Boolean GAME_OVER;
+static enum Boolean GAME_WON = FALSE;
+static enum Boolean GAME_OVER = FALSE;
 
 void calculate_neighbours_bombs(struct game_board *game_board) {
     for (int i = 0; i < game_board->rows; i++) {
@@ -38,6 +38,15 @@ void calculate_neighbours_bombs(struct game_board *game_board) {
     }
 }
 
+/*
+The two procedures below indicate whether the game is done by looking at the (static) global variables GAME_WON and GAME_OVER.
+*/
+enum Boolean has_player_won() {
+    return GAME_WON;
+}
+enum Boolean has_player_lost() {
+    return GAME_OVER;
+}
 
 void remove_flag(struct cell *the_cell, struct flags_info *flags_info) {
     the_cell->flagged = FALSE;
