@@ -48,7 +48,7 @@ void install_bombs(struct game_board *game_board, int total_bombs) {
         int bomb_row = rand() % game_board->rows;
         int bomb_column = rand() % game_board->columns;
         if ((bomb_row != USER_INPUT.row) || (bomb_column != USER_INPUT.column)) {
-            struct cell *bomb_cell = &playing_field[bomb_row][bomb_column];
+            struct cell *bomb_cell = &game_board->playing_field[bomb_row][bomb_column];
             if (!bomb_cell->bomb) { // to ensure that all bombs are placed in different cells
                 bomb_cell->bomb = TRUE;
                 placed_bombs++;
@@ -58,17 +58,48 @@ void install_bombs(struct game_board *game_board, int total_bombs) {
 }
 
 /*
+Dynamically allocates the playing field.
+*/
+struct cell **make_field(int rows, int columns) {
+    struct cell **array2d = (struct cell **)calloc(rows, sizeof(struct cell *)); // struct *cell werkt blijkbaar niet
+    for (int i = 0; i < rows; i++) {
+        array2d[i] = (struct cell *)calloc(columns, sizeof(struct cell));
+    }
+    return array2d;
+}
+
+/*
+Deallocates the dynamically allocated playing field.
+*/
+void deallocate_field(struct game_board *game_board) {
+    for (int i = 0; i < game_board->rows; i++) {
+        free(game_board->playing_field[i]);
+    }
+    free(game_board->playing_field);
+}
+
+/*
+Deallocates all dynamically allocated memory.
+*/
+void deallocate_memory(struct game_board *game_board) {
+    // GUI
+    free_gui();
+    //playing_vield
+    deallocate_field(game_board);
+}
+
+/*
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, 
 the first command is handled separately to ensure that the first given row and column of the player does not contain a mine.
 */
-void initialize(struct game_board *game_board, int total_bombs, int *placed_flags, int *correct_placed_flags) {
+void initialize(struct game_board *game_board, int total_bombs, struct flags_info *flags_info) {
     initialize_field(game_board);
     initialize_gui(game_board->rows, game_board->columns);
     call_the_drawer(game_board);
     read_input();
     install_bombs(game_board, total_bombs);
     calculate_neighbours_bombs(game_board);
-    process_input(game_board, total_bombs, placed_flags, correct_placed_flags);
+    process_input(game_board, total_bombs, flags_info);
 }
 
 int main(int argc, const char *argv[]) {
@@ -93,10 +124,7 @@ int main(int argc, const char *argv[]) {
     USER_INPUT.column = rand() % game_board.columns;
 
     // dynamic allocation of the playing field
-    struct cell **playing_field = malloc(game_board.rows * sizeof(struct cell *));
-    for (int i = 0; i < game_board.rows; i++) {
-        playing_field[i] = malloc(game_board.columns * sizeof(struct cell));
-    }
+    struct cell **playing_field = make_field(game_board.rows, game_board.columns);
 
     
     flags_info.placed_flags = 0;
@@ -134,13 +162,5 @@ int main(int argc, const char *argv[]) {
         read_input();
 
     // memory deallocation
-
-    // GUI
-    free_gui();
-
-    //playing_vield
-    for (int i = 0; i < game_board.rows; i++) {
-        free(playing_field[i]);
-    }
-    free(playing_field);
+    deallocate_memory(&game_board);
 }

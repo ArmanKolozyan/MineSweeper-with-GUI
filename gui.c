@@ -142,7 +142,7 @@ void draw_field(struct game_board *game_board, enum Boolean reveal_all) {
     SDL_RenderClear(RENDERER);
     for (int i = 0; i < game_board->rows; i++) {
         for (int j = 0; j < game_board->columns; j++) {
-            struct cell *current_cell = game_board->playing_field[i][j];
+            struct cell *current_cell = &game_board->playing_field[i][j];
             SDL_Rect rectangle = {j * IMAGE_WIDTH, i * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
                 if (current_cell->flagged && !reveal_all) { // sequence of condition checks plays a crucial role, because otherwise a flagged cell would contain the neighbours_count on the screen

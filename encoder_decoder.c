@@ -20,18 +20,18 @@ Encodes the game state into a file named "gamestate.txt".
 void encode(struct game_board *game_board, struct flags_info *flags_info) {
     FILE *fp;
     fp = fopen(ENCODE_FILENAME, "w");
-    fprintf(fp, "%d", &game_board->rows);
+    fprintf(fp, "%d", game_board->rows);
     fputc('\n', fp);
-    fprintf(fp, "%d", &game_board->columns);
+    fprintf(fp, "%d", game_board->columns);
     fputc('\n', fp);
-    fprintf(fp, "%d", &flags_info->placed_flags);
+    fprintf(fp, "%d", flags_info->placed_flags);
     fputc('\n', fp);
-    fprintf(fp, "%d", &flags_info->correct_placed_flags);
+    fprintf(fp, "%d", flags_info->correct_placed_flags);
     fputc('\n', fp);
     ;
     for (int i = 0; i < game_board->rows; i++) {
         for (int j = 0; j < game_board->columns; j++) {
-            struct cell *current_cell = game_board->playing_field[i][j];
+            struct cell *current_cell = &game_board->playing_field[i][j];
             if (!current_cell->bomb) {
                 int neighbours_count = current_cell->neighbours_count;
                 fprintf(fp, "%d", neighbours_count);
@@ -84,7 +84,7 @@ void decode(struct game_board *game_board, int *total_bombs, char *filename, str
     flags_info->correct_placed_flags = atoi(input_buffer);
     for (int i = 0; i < game_board->rows; i++) {
         for (int j = 0; j < game_board->columns; j++) {
-            struct cell *current_cell = game_board->playing_field[i][j];
+            struct cell *current_cell = &game_board->playing_field[i][j];
             fgets(input_buffer, sizeof input_buffer, fp);
             char curr = input_buffer[0];
             if (curr == 'B') {

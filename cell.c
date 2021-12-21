@@ -8,7 +8,7 @@ extern enum Boolean GAME_OVER;
 void calculate_neighbours_bombs(struct game_board *game_board) {
     for (int i = 0; i < game_board->rows; i++) {
         for (int j = 0; j < game_board->columns; j++) {
-            struct cell *current_cell = game_board->playing_field[i][j];
+            struct cell *current_cell = &game_board->playing_field[i][j];
             if (current_cell->bomb) { // we don't have to count the neighbours of bombs
                 continue;
             }
@@ -25,7 +25,7 @@ void calculate_neighbours_bombs(struct game_board *game_board) {
                             continue;
                         }
                         {
-                            struct cell *neighbour = game_board->playing_field[neighbour_i][neighbour_j];
+                            struct cell *neighbour = &game_board->playing_field[neighbour_i][neighbour_j];
                             if (neighbour->bomb) {
                                 neighbour_bombs++;
                             }
@@ -54,7 +54,7 @@ void place_flag(struct cell *the_cell, struct flags_info *flags_info, int total_
         } else if (flags_info->placed_flags < total_bombs) {
             the_cell->flagged = TRUE;
             (flags_info->placed_flags)++; // brackets are necessary since "++"" has higher precedence than "*"
-            printf("Remaining flags: %i\n", total_bombs - *placed_flags);
+            printf("Remaining flags: %i\n", total_bombs - flags_info->placed_flags);
             if (the_cell->bomb) {
                 (flags_info->placed_flags)++;
                 if (flags_info->correct_placed_flags == total_bombs) {
@@ -86,7 +86,7 @@ void reveal_neighbours(struct game_board *game_board, int row, int column, struc
                 continue;
             }
             {
-                struct cell *neighbour = game_board->playing_field[neighbour_i][neighbour_j];
+                struct cell *neighbour = &game_board->playing_field[neighbour_i][neighbour_j];
                 if (!neighbour->revealed) // otherwise infinite loop (constantly asking each other to reveal themselves)
                 {
                     reveal(game_board, neighbour_i, neighbour_j, flags_info);
@@ -97,7 +97,7 @@ void reveal_neighbours(struct game_board *game_board, int row, int column, struc
 }
 
 void reveal(struct game_board *game_board, int row, int column, struct flags_info *flags_info) {
-    struct cell *the_cell = game_board->playing_field[row][column];
+    struct cell *the_cell = &game_board->playing_field[row][column];
     if (the_cell->flagged) {
         remove_flag(the_cell, flags_info); // personal choice: if the player wants to reveal a flagged cell, the flag is given back to the player before the reveal
     }
