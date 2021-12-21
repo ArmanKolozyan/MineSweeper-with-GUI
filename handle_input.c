@@ -5,10 +5,6 @@
 #include <stdlib.h> // for the atoi-function
 #include <string.h> // for the strcpy-function
 
-extern enum Command USER_COMMAND;
-extern int USER_ROW;
-extern int USER_COLUMN; 
-
 /*
 The program can be started in two ways. It is both possible to load a saved playfield and continue with it, and to simply start from a new field with given dimensions. 
 If the state of the game is stored in a file called "state.txt", then the player can load the game using the following command: ./MineSweeper -f state.txt
@@ -17,13 +13,13 @@ These three arguments can be entered in any order.
 
 This function returns 1 if everything went well, otherwise it returns 0 so that the game process is stopped.
 */
-int handle_initial_arguments(int *rows, int *columns, int *total_bombs, int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
+int handle_initial_arguments(int argc, const char *argv[], int *rows, int *columns, int *total_bombs, char *filename, enum Boolean *file_flag) {
     enum Boolean can_continue = TRUE;
     int provided_options = 0;
     char opt;
     while ((--argc > 0) && (**++argv == '-')) {
         if ((opt = *++*argv) == '\0') {
-            printf("Please provide one of the following flags; f: file, h: height, w: width, m: mines.\n");
+            printf("Please provide one of the following flags after '-'; f: file, h: height, w: width, m: mines.\n");
             printf("Usage examples: ./MineSweeper -w 5 -h 7 -m 2\n                ./MineSweeper -f game_state.txt\n");
             return 0;
         }
@@ -64,20 +60,17 @@ int handle_initial_arguments(int *rows, int *columns, int *total_bombs, int argc
             FILE *fp;
             ++provided_options;
             if ((fp = fopen(*argv, "r")) != NULL) {
-                char rows_input[5];
-                char columns_input[5];
-                fgets(rows_input, sizeof rows_input, fp);
-                fgets(columns_input, sizeof columns_input, fp);
+                // we have to read the rows and columns here
+                // so that the dynamic allocation can be done after this function
+                fscanf(fp, "%d ", rows);    // read the number of rows
+                fscanf(fp, "%d ", columns); // read the number of columns
                 fclose(fp);
-                *rows = atoi(rows_input);
-                *columns = atoi(columns_input);
                 strcpy(filename, *argv);
                 *file_flag = TRUE;
             } else {
-                fclose(fp);
-                can_continue = FALSE;
                 printf("Please provide a valid file name.\n");
                 printf("You can do this by entering the correct file name after the '-f' flag.\n");
+                return 0;
             }
             break;
         default:
@@ -100,18 +93,11 @@ int handle_initial_arguments(int *rows, int *columns, int *total_bombs, int argc
     }
 }
 
-void process_input(int rows, int columns, struct cell playing_field[rows][columns], int *placed_flags, int *correct_placed_flags) {
-    if (USER_COMMAND == REVEAL) {
-        reveal(playing_field, USER_ROW, USER_COLUMN, placed_flags, correct_placed_flags);
-    } else if (USER_COMMAND == FLAG) {
-        place_flag(&playing_field[USER_ROW][USER_COLUMN], placed_flags, correct_placed_flags);
-    } else if (USER_COMMAND == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that,
-    }                                   //  because when calling "call_the_printer" in Minesweeper.c, it checks whether the entire revealed field should be printed.
-}
-
-void handle_game_end() {
-    printf("Press ENTER to exit the game session.\n"); // In this way, the player can continue to look at the playing field when the game session is over.
-    while (getchar() != '\n') {
-
+void process_input(int rows, int columns, struct cell playing_field[rows][columns], int total_bombs, int *placed_flags, int *correct_placed_flags) {
+    if (USER_INPUT.command == REVEAL) {
+        reveal(rows, columns, playing_field, USER_INPUT.row, USER_INPUT.column, placed_flags, correct_placed_flags);
+    } else if (USER_INPUT.command == FLAG) {
+        place_flag(&playing_field[USER_INPUT.row][USER_INPUT.column], placed_flags, correct_placed_flags, total_bombs);
+    } else if (USER_INPUT.command == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that,
     }
 }

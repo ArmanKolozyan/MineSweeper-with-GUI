@@ -1,7 +1,7 @@
 #include "cell.h"
 #include <stdio.h>
 
-int remaining_nonbomb_cells;
+static int remaining_nonbomb_cells;
 extern enum Boolean GAME_WON;
 extern enum Boolean GAME_OVER;
 
@@ -89,7 +89,7 @@ void reveal_neighbours(int rows, int columns, struct cell playing_field[rows][co
                 struct cell *neighbour = &playing_field[neighbour_i][neighbour_j];
                 if (!neighbour->revealed) // otherwise infinite loop (constantly asking each other to reveal themselves)
                 {
-                    reveal(playing_field, neighbour_i, neighbour_j, placed_flags, correct_placed_flags);
+                    reveal(rows, columns, playing_field, neighbour_i, neighbour_j, placed_flags, correct_placed_flags);
                 }
             }
         }
@@ -112,7 +112,7 @@ void reveal(int rows, int columns, struct cell playing_field[rows][columns], int
             GAME_WON = 1;
         }
         if (the_cell->neighbours_count == 0) {
-            reveal_neighbours(playing_field, row, column, placed_flags, correct_placed_flags);
+            reveal_neighbours(rows, columns, playing_field, row, column, placed_flags, correct_placed_flags);
         }
     }
 }

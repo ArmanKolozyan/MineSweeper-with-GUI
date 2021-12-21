@@ -17,7 +17,7 @@ second character indicates whether the cell is revealed (R), flagged (F), or hid
 /*
 Decodes the state of the game given the filename.
 */
-void decode(char *filename, int *total_bombs, int *rows, int *columns, struct cell playing_field[rows][columns], int *placed_flags, int *correct_placed_flags) {
+void decode(int *rows, int *columns, struct cell playing_field[*rows][*columns], int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags) {
 
     /*
     This buffer will not be cleared after every call to fgets because
@@ -30,15 +30,18 @@ void decode(char *filename, int *total_bombs, int *rows, int *columns, struct ce
     FILE *fp;
     fp = fopen(filename, "r");
 
-    fscanf(fp, "%d ", rows);                     // read the number of rows
-    fscanf(fp, "%d ", columns);                  // read the number of columns
+    /* 
+    the rows and columns are already decoded in handle_initial_arguments,
+    but it is done here again to make the function more general
+    */
+    fscanf(fp, "%d ", rows);                      // read the number of rows
+    fscanf(fp, "%d ", columns);                   // read the number of columns
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of placed flags
     *placed_flags = atoi(input_buffer);
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of correctly placed flags
     *correct_placed_flags = atoi(input_buffer);
-
-    for (int i = 0; i < *rows; i++) {
-        for (int j = 0; j < *columns; j++) {
+    for (int i = 0; i < (*rows); i++) {
+        for (int j = 0; j < (*columns); j++) {
             struct cell *current_cell = &playing_field[i][j];
             fgets(input_buffer, sizeof input_buffer, fp);
             char curr = input_buffer[0];
@@ -83,7 +86,7 @@ void encode(int rows, int columns, struct cell playing_field[rows][columns], int
     fputc('\n', fp);
     fprintf(fp, "%d", correct_placed_flags);
     fputc('\n', fp);
-    fclose(fp);
+    ;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
@@ -107,4 +110,5 @@ void encode(int rows, int columns, struct cell playing_field[rows][columns], int
             fputc('\n', fp);
         }
     }
+    fclose(fp);
 }
