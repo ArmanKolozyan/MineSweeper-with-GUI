@@ -24,7 +24,7 @@ enum Boolean GAME_WON;
 Fills the 2D array (defined in the main function) with structs and gives default values to the struct members.
 This function is only called when the user wants to start a new session from scratch and doesn't want to load the game from a file.
 */
-void initialize_field(int rows, int columns, struct cell playing_field[rows][columns]) {
+void initialize_field(int rows, int columns, struct cell **playing_field) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
@@ -41,7 +41,7 @@ Places the number of bombs specified by the user.
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, this function receives the 
 row and column of the first call of reveal/flag. If the first call is a print, then it receives a random row and column.
 */
-void install_bombs(int rows, int columns, struct cell playing_field[rows][columns], int total_bombs) {
+void install_bombs(int rows, int columns, struct cell **playing_field, int total_bombs) {
     srand(time(0)); //to seed rand with a starting value
     int placed_bombs = 0;
     while (placed_bombs != total_bombs) {
@@ -61,7 +61,7 @@ void install_bombs(int rows, int columns, struct cell playing_field[rows][column
 To prevent the player from immediately, in the first turn, stepping on a mine and losing the game, 
 the first command is handled separately to ensure that the first given row and column of the player does not contain a mine.
 */
-void initialize(int rows, int columns, struct cell playing_field[rows][columns], int total_bombs, int *placed_flags, int *correct_placed_flags) {
+void initialize(int rows, int columns, struct cell **playing_field, int total_bombs, int *placed_flags, int *correct_placed_flags) {
     initialize_field(rows, columns, playing_field);
     initialize_gui(rows, columns);
     draw_field(rows, columns, playing_field, FALSE);
@@ -93,7 +93,12 @@ int main(int argc, const char *argv[]) {
     USER_INPUT.column = rand() % columns;
 
     // dynamic allocation of the playing field
-    struct cell(*playing_field)[columns] = malloc(sizeof(struct cell[rows][columns])); // see: https://stackoverflow.com/a/12805980/14043571
+    ////// struct cell(*playing_field)[columns] = malloc(sizeof(struct cell[rows][columns])); // see: https://stackoverflow.com/a/12805980/14043571
+
+    struct cell **playing_field = malloc(rows * sizeof(struct cell *));
+    for (int i = 0; i < rows; i++) {
+        array[i] = malloc(columns * sizeof(struct cell));
+    }
 
     if (file_option) { // user wants to start game session from own file
         decode(&rows, &columns, playing_field, &total_bombs, filename, &placed_flags, &correct_placed_flags);
@@ -127,5 +132,8 @@ int main(int argc, const char *argv[]) {
 
     // memory deallocation
     free_gui();
+    for (int i = 0; i < rows; i++) {
+        free(playing_field[i]);
+    }
     free(playing_field);
 }

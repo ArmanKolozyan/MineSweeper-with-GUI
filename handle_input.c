@@ -93,7 +93,7 @@ int handle_initial_arguments(int argc, const char *argv[], int *rows, int *colum
     }
 }
 
-void process_input(int rows, int columns, struct cell playing_field[rows][columns], int total_bombs, int *placed_flags, int *correct_placed_flags) {
+void process_input(int rows, int columns, struct cell **playing_field, int total_bombs, int *placed_flags, int *correct_placed_flags) {
     if (USER_INPUT.command == REVEAL) {
         reveal(rows, columns, playing_field, USER_INPUT.row, USER_INPUT.column, placed_flags, correct_placed_flags);
     } else if (USER_INPUT.command == FLAG) {

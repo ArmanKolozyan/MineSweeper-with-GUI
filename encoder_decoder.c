@@ -17,7 +17,7 @@ second character indicates whether the cell is revealed (R), flagged (F), or hid
 /*
 Decodes the state of the game given the filename.
 */
-void decode(int *rows, int *columns, struct cell playing_field[*rows][*columns], int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags) {
+void decode(int *rows, int *columns, struct cell **playing_field, int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags) {
 
     /*
     This buffer will not be cleared after every call to fgets because
@@ -75,7 +75,7 @@ void decode(int *rows, int *columns, struct cell playing_field[*rows][*columns],
 /*
 Encodes the game state into a file named "gamestate.txt".
 */
-void encode(int rows, int columns, struct cell playing_field[rows][columns], int placed_flags, int correct_placed_flags) {
+void encode(int rows, int columns, struct cell **playing_field, int placed_flags, int correct_placed_flags) {
     FILE *fp;
     fp = fopen(ENCODE_FILENAME, "w");
     fprintf(fp, "%d", rows);
