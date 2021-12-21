@@ -7,10 +7,7 @@
 
 extern enum Command USER_COMMAND;
 extern int USER_ROW;
-extern int USER_COLUMN; // later miss beter in een struct
-extern int TOTAL_BOMBS;
-extern int ROWS;
-extern int COLUMNS;
+extern int USER_COLUMN; 
 
 /*
 The program can be started in two ways. It is both possible to load a saved playfield and continue with it, and to simply start from a new field with given dimensions. 
@@ -20,7 +17,7 @@ These three arguments can be entered in any order.
 
 This function returns 1 if everything went well, otherwise it returns 0 so that the game process is stopped.
 */
-int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
+int handle_initial_arguments(int *rows, int *columns, int *total_bombs, int argc, const char *argv[], char *filename, enum Boolean *file_flag) {
     enum Boolean can_continue = TRUE;
     int provided_options = 0;
     char opt;
@@ -35,7 +32,7 @@ int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boo
             ++argv;
             --argc;
             ++provided_options;
-            if ((argc < 1) || ((COLUMNS = atoi(*argv)) == 0)) {
+            if ((argc < 1) || ((*columns = atoi(*argv)) == 0)) {
                 printf("Please provide a valid width.\n");
                 printf("You can do this by entering the desired number after the '-w' flag.\n");
                 can_continue = FALSE;
@@ -45,7 +42,7 @@ int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boo
             argv++;
             --argc;
             ++provided_options;
-            if ((argc < 1) || ((ROWS = atoi(*argv)) == 0)) {
+            if ((argc < 1) || ((*rows = atoi(*argv)) == 0)) {
                 printf("Please provide a valid height.\n");
                 printf("You can do this by entering the desired number after the '-h' flag.\n");
                 can_continue = FALSE;
@@ -55,7 +52,7 @@ int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boo
             argv++;
             --argc;
             ++provided_options;
-            if ((argc < 1) || ((TOTAL_BOMBS = atoi(*argv)) == 0)) {
+            if ((argc < 1) || ((*total_bombs = atoi(*argv)) == 0)) {
                 printf("Please provide a valid number of mines.\n");
                 printf("You can do this by entering the desired number after the '-m' flag.\n");
                 can_continue = FALSE;
@@ -72,8 +69,8 @@ int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boo
                 fgets(rows_input, sizeof rows_input, fp);
                 fgets(columns_input, sizeof columns_input, fp);
                 fclose(fp);
-                ROWS = atoi(rows_input);
-                COLUMNS = atoi(columns_input);
+                *rows = atoi(rows_input);
+                *columns = atoi(columns_input);
                 strcpy(filename, *argv);
                 *file_flag = TRUE;
             } else {
@@ -103,7 +100,7 @@ int get_initial_arguments(int argc, const char *argv[], char *filename, enum Boo
     }
 }
 
-void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
+void process_input(int rows, int columns, struct cell playing_field[rows][columns], int *placed_flags, int *correct_placed_flags) {
     if (USER_COMMAND == REVEAL) {
         reveal(playing_field, USER_ROW, USER_COLUMN, placed_flags, correct_placed_flags);
     } else if (USER_COMMAND == FLAG) {
@@ -113,7 +110,7 @@ void process_input(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, 
 }
 
 void handle_game_end() {
-    printf("Press ENTER to exit the game session!\n");
+    printf("Press ENTER to exit the game session.\n"); // In this way, the player can continue to look at the playing field when the game session is over.
     while (getchar() != '\n') {
 
     }

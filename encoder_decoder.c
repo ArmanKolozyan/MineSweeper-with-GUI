@@ -12,14 +12,12 @@ second character indicates whether the cell is revealed (R), flagged (F), or hid
 #include <stdio.h>
 #include <stdlib.h> // for the atoi-function
 
-extern int TOTAL_BOMBS;
-extern int ROWS;
-extern int COLUMNS;
+#define ENCODE_FILENAME "gamestate.txt"
 
 /*
 Decodes the state of the game given the filename.
 */
-void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags) {
+void decode(char *filename, int *total_bombs, int *rows, int *columns, struct cell playing_field[rows][columns], int *placed_flags, int *correct_placed_flags) {
 
     /*
     This buffer will not be cleared after every call to fgets because
@@ -32,20 +30,20 @@ void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *place
     FILE *fp;
     fp = fopen(filename, "r");
 
-    fscanf(fp, "%d ", &ROWS);                     // read the number of rows
-    fscanf(fp, "%d ", &COLUMNS);                  // read the number of columns
+    fscanf(fp, "%d ", rows);                     // read the number of rows
+    fscanf(fp, "%d ", columns);                  // read the number of columns
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of placed flags
     *placed_flags = atoi(input_buffer);
     fgets(input_buffer, sizeof input_buffer, fp); // reads the number of correctly placed flags
     *correct_placed_flags = atoi(input_buffer);
 
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
+    for (int i = 0; i < *rows; i++) {
+        for (int j = 0; j < *columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
             fgets(input_buffer, sizeof input_buffer, fp);
             char curr = input_buffer[0];
             if (curr == 'B') {
-                TOTAL_BOMBS++;
+                (*total_bombs)++;
                 current_cell->neighbours_count = 0;
                 current_cell->bomb = TRUE;
             } else {
@@ -72,22 +70,22 @@ void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *place
 }
 
 /*
-Encodes the game state into a file named "state.txt".
+Encodes the game state into a file named "gamestate.txt".
 */
-void encode(struct cell playing_field[ROWS][COLUMNS], int placed_flags, int correct_placed_flags) {
+void encode(int rows, int columns, struct cell playing_field[rows][columns], int placed_flags, int correct_placed_flags) {
     FILE *fp;
-    fp = fopen("state.txt", "w");
-    fprintf(fp, "%d", ROWS);
+    fp = fopen(ENCODE_FILENAME, "w");
+    fprintf(fp, "%d", rows);
     fputc('\n', fp);
-    fprintf(fp, "%d", COLUMNS);
+    fprintf(fp, "%d", columns);
     fputc('\n', fp);
     fprintf(fp, "%d", placed_flags);
     fputc('\n', fp);
     fprintf(fp, "%d", correct_placed_flags);
     fputc('\n', fp);
     fclose(fp);
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
             if (!current_cell->bomb) {
                 int neighbours_count = current_cell->neighbours_count;

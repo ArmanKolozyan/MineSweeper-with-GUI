@@ -33,12 +33,6 @@ The height and width of the window (in pixels).
 int WINDOW_HEIGHT;
 int WINDOW_WIDTH;
 
-/* 
-The number of rows and columns of the playing field determined by the player.
-*/
-extern int ROWS;
-extern int COLUMNS;
-
 /*
 The variables below represent the player's events.
 The row and column chosen by the player will be initialized by a random number. 
@@ -143,7 +137,7 @@ void read_input() {
 /* 
 Calls the "draw_field" function to draw the field. 
 */
-void call_the_drawer(struct cell playing_field[ROWS][COLUMNS]) {
+void call_the_drawer(int rows, int columns, struct cell playing_field[rows][columns]) {
     if (USER_COMMAND == PRINT) {
         draw_field(playing_field, TRUE);
     } else {
@@ -154,11 +148,11 @@ void call_the_drawer(struct cell playing_field[ROWS][COLUMNS]) {
 /*
 Draws the playing field.
 */
-void draw_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_all) {
+void draw_field(int rows, int columns, struct cell playing_field[rows][columns], enum Boolean reveal_all) {
 
     SDL_RenderClear(RENDERER);
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
             SDL_Rect rectangle = {j * IMAGE_WIDTH, i * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
@@ -255,9 +249,9 @@ void initialize_textures() {
 Initializes the window and the textures of the images that will be displayed. 
 This function is called at the beginning of the game, before the playing field is drawn.
  */
-void initialize_gui() {
-    WINDOW_HEIGHT = IMAGE_HEIGHT * ROWS;
-    WINDOW_WIDTH = IMAGE_WIDTH * COLUMNS;
+void initialize_gui(int rows, int columns) {
+    WINDOW_HEIGHT = IMAGE_HEIGHT * rows;
+    WINDOW_WIDTH = IMAGE_WIDTH * columns;
     initialize_window("MineSweeper");
     initialize_textures();
 }
