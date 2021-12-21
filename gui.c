@@ -30,25 +30,14 @@ SDL_Texture *TEXTURES_ARRAY[AMOUNT_OF_TEXTURES];
 /*
 The height and width of the window (in pixels).
 */
-int WINDOW_HEIGHT;
-int WINDOW_WIDTH;
-
-/* 
-The number of rows and columns of the playing field determined by the player.
-*/
-extern int ROWS;
-extern int COLUMNS;
+static int WINDOW_HEIGHT;
+static int WINDOW_WIDTH;
 
 /*
-The variables below represent the player's events.
-The row and column chosen by the player will be initialized by a random number. 
-Since when installing the mines we prevent the player from immediately, 
-in the first turn, stepping on a mine and losing the game, 
-this ensures that the function runs correctly even though the player's first command is the print command.
+The variable below represent the player's events.
+The struct members are: row, column and command of the user.
 */
-enum Command USER_COMMAND;
-int USER_ROW;
-int USER_COLUMN;
+struct user_input USER_INPUT;
 
 /*
 This renderer is used to draw figures in the window. 
@@ -59,14 +48,8 @@ static SDL_Renderer *RENDERER;
 /*
 The two variables below keep track of the last position where the user clicked.
  */
-int MOUSE_X = 0;
-int MOUSE_Y = 0;
-
-/*
-Indicates whether the application should continue. 
-This is true as long as the user does not want to close the application by clicking the x button on the screen.
- */
-enum Boolean SHOULD_CONTINUE = TRUE;
+static int MOUSE_X = 0;
+static int MOUSE_Y = 0;
 
 /*
 This is the window that will be shown and in which the playing field is displayed. 
@@ -96,8 +79,8 @@ Only if the previous command was the print command we do not need to reset it be
 needs to know that the user has already asked for a print so that this time the playing field is reset to its original display.
 */
 void reset_command(void) {
-    if (USER_COMMAND != PRINT) {
-        USER_COMMAND = NOTHING;
+    if (USER_INPUT.command != PRINT) {
+        USER_INPUT.command = NOTHING;
     }
 }
 
@@ -116,26 +99,26 @@ void read_input() {
     switch (event.type) {
     case SDL_KEYDOWN:
         if (event.key.keysym.sym == PRINT_KEY) {
-            if (USER_COMMAND == PRINT) {
-                USER_COMMAND = NOTHING;
+            if (USER_INPUT.command == PRINT) {
+                USER_INPUT.command = NOTHING;
             } else {
-                USER_COMMAND = PRINT;
+                USER_INPUT.command = PRINT;
             }
         }
         break;
 
     case SDL_MOUSEBUTTONDOWN:
-        USER_COLUMN = event.button.x / IMAGE_WIDTH;
-        USER_ROW = event.button.y / IMAGE_HEIGHT;
+        USER_INPUT.column = event.button.x / IMAGE_WIDTH;
+        USER_INPUT.row = event.button.y / IMAGE_HEIGHT;
         if (event.button.button == REVEAL_KEY) {
-            USER_COMMAND = REVEAL;
+            USER_INPUT.command = REVEAL;
         } else if (event.button.button == FLAG_KEY) {
-            USER_COMMAND = FLAG;
+            USER_INPUT.command = FLAG;
         }
         break;
 
     case SDL_QUIT:
-        SHOULD_CONTINUE = FALSE;
+        USER_INPUT.should_continue = FALSE;
         break;
     }
 }
@@ -143,22 +126,22 @@ void read_input() {
 /* 
 Calls the "draw_field" function to draw the field. 
 */
-void call_the_drawer(struct cell playing_field[ROWS][COLUMNS]) {
-    if (USER_COMMAND == PRINT) {
-        draw_field(playing_field, TRUE);
+void call_the_drawer(int rows, int columns, struct cell playing_field[rows][columns]) {
+    if (USER_INPUT.command == PRINT) {
+        draw_field(rows, columns, playing_field, TRUE);
     } else {
-        draw_field(playing_field, FALSE);
+        draw_field(rows, columns, playing_field, FALSE);
     }
 }
 
 /*
 Draws the playing field.
 */
-void draw_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_all) {
+void draw_field(int rows, int columns, struct cell playing_field[rows][columns], enum Boolean reveal_all) {
 
     SDL_RenderClear(RENDERER);
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLUMNS; j++) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
             SDL_Rect rectangle = {j * IMAGE_WIDTH, i * IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT};
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
@@ -255,9 +238,10 @@ void initialize_textures() {
 Initializes the window and the textures of the images that will be displayed. 
 This function is called at the beginning of the game, before the playing field is drawn.
  */
-void initialize_gui() {
-    WINDOW_HEIGHT = IMAGE_HEIGHT * ROWS;
-    WINDOW_WIDTH = IMAGE_WIDTH * COLUMNS;
+void initialize_gui(int rows, int columns) {
+    USER_INPUT.should_continue = TRUE;
+    WINDOW_HEIGHT = IMAGE_HEIGHT * rows;
+    WINDOW_WIDTH = IMAGE_WIDTH * columns;
     initialize_window("MineSweeper");
     initialize_textures();
 }

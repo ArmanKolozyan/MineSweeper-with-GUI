@@ -20,4 +20,15 @@ struct cell {
     int neighbours_count;
 };
 
+/*
+should_continue indicates whether the gui-application should continue. 
+This is true as long as the user does not want to close the application by clicking the x button on the screen.
+*/
+struct user_input {
+    enum Command command;
+    int row;
+    int column;
+    enum Boolean should_continue;
+};
+
 #endif

@@ -3,10 +3,7 @@
 
 #include "datatypes.h"
 
-extern int ROWS;
-extern int COLUMNS;
-
-void encode(struct cell playing_field[ROWS][COLUMNS], int placed_flags, int correct_placed_flags);
-void decode(char *filename, struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags);
+void encode(int rows, int columns, struct cell playing_field[rows][columns], int placed_flags, int correct_placed_flags);
+void decode(int *rows, int *columns, struct cell playing_field[*rows][*columns], int *total_bombs, char *filename, int *placed_flags, int *correct_placed_flags);
 
 #endif
