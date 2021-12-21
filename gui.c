@@ -82,10 +82,6 @@ void reset_command(void) {
     }
 }
 
-void provide_user_input(struct user_input *input_struct) {
-    input_struct = &USER_INPUT;
-}
-
 /*
 Receives input from the GUI.
  */

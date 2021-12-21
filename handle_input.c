@@ -11,7 +11,7 @@ If the state of the game is stored in a file called "state.txt", then the player
 On the other hand, the player can also start a new playfield with width 20 and height 10 that contains 15 mines, by executing the following command: ./MineSweeper -w 20 -h 10 -m 15.
 These three arguments can be entered in any order.
 
-This function returns 1 if everything went well, otherwise it returns 0 so that the game process is stopped.
+This function returns 1 if everything went well, otherwise it returns 0 so that the game process can be stopped.
 */
 int handle_initial_arguments(int argc, const char *argv[], struct game_board *game_board, int *total_bombs, char *filename, enum Boolean *file_flag) {
     enum Boolean can_continue = TRUE;
@@ -85,7 +85,7 @@ int handle_initial_arguments(int argc, const char *argv[], struct game_board *ga
     }
     if (!*file_flag && (provided_options < 3)) {
         if (!can_continue) {
-            printf("Also: ");
+            printf("Also: "); // when two errors occur at the same time
         }
         printf("Please provide enough arguments.\n");
         printf("Usage examples: ./MineSweeper -w 5 -h 7 -m 2\n                ./MineSweeper -f game_state.txt\n");
@@ -99,7 +99,7 @@ int handle_initial_arguments(int argc, const char *argv[], struct game_board *ga
 
 void process_input(struct game_board *game_board, int total_bombs, struct flags_info *flags_info, struct user_input *user_input) {
     if (user_input->command == REVEAL) {
-        reveal(game_board, user_input->row, user_input->column, flags_info);
+        reveal(game_board, user_input->row, user_input->column, flags_info, total_bombs);
     } else if (user_input->command == FLAG) {
         place_flag(&game_board->playing_field[user_input->row][user_input->column], flags_info, total_bombs);
     } else if (user_input->command == PRINT) { // In the case of PRINT, we don't have to do anything here, but this piece is left here to emphasize that
